@@ -24,6 +24,13 @@ import {
   Calendar,
   User,
   ShoppingCart,
+  LogIn,
+  Search,
+  Eye,
+  MousePointer,
+  Send,
+  MailOpen,
+  ExternalLink,
 } from "lucide-react";
 import {
   mockCustomers,
@@ -55,6 +62,41 @@ const monthlyOrderSummary = [
   { month: "2026-02", count: 13, amount: 298000 },
   { month: "2026-03", count: 4, amount: 84500 },
 ];
+
+// 行動履歴モックデータ
+const mockBehaviorLogs = [
+  { id: 1, timestamp: "2026-03-03 10:30", type: "login", detail: "ECサイトにログイン", icon: LogIn },
+  { id: 2, timestamp: "2026-03-03 10:32", type: "search", detail: "「鶏もも肉」を検索", icon: Search },
+  { id: 3, timestamp: "2026-03-03 10:35", type: "view", detail: "商品ページ閲覧: 国産鶏もも肉 2kg", icon: Eye },
+  { id: 4, timestamp: "2026-03-03 10:36", type: "cart", detail: "カートに追加: 国産鶏もも肉 2kg", icon: ShoppingCart },
+  { id: 5, timestamp: "2026-03-03 10:38", type: "view", detail: "商品ページ閲覧: 天然サーモン 1kg", icon: Eye },
+  { id: 6, timestamp: "2026-03-02 09:15", type: "login", detail: "ECサイトにログイン", icon: LogIn },
+  { id: 7, timestamp: "2026-03-02 09:18", type: "order", detail: "注文確定: 20260302-001（¥8,000）", icon: ShoppingCart },
+  { id: 8, timestamp: "2026-03-01 08:00", type: "login", detail: "ECサイトにログイン", icon: LogIn },
+  { id: 9, timestamp: "2026-03-01 08:05", type: "search", detail: "「モッツァレラ」を検索", icon: Search },
+  { id: 10, timestamp: "2026-03-01 08:10", type: "order", detail: "注文確定: 20260301-001（¥12,400）", icon: ShoppingCart },
+  { id: 11, timestamp: "2026-02-28 14:20", type: "click", detail: "LINEメッセージ内リンクをクリック", icon: MousePointer },
+  { id: 12, timestamp: "2026-02-28 11:00", type: "login", detail: "ECサイトにログイン", icon: LogIn },
+];
+
+// コミュニケーション履歴モックデータ
+const mockCommLogs = [
+  { id: 1, sentAt: "2026-03-03 09:00", channel: "line", type: "auto", subject: "離反リスク通知", status: "opened", openedAt: "2026-03-03 09:15", clicked: true },
+  { id: 2, sentAt: "2026-03-01 10:00", channel: "email", type: "manual", subject: "3月キャンペーン告知", status: "opened", openedAt: "2026-03-01 12:30", clicked: false },
+  { id: 3, sentAt: "2026-02-25 08:00", channel: "line", type: "auto", subject: "新商品入荷のお知らせ", status: "opened", openedAt: "2026-02-25 08:45", clicked: true },
+  { id: 4, sentAt: "2026-02-20 09:00", channel: "email", type: "manual", subject: "2月特売チラシ", status: "delivered", openedAt: null, clicked: false },
+  { id: 5, sentAt: "2026-02-15 10:00", channel: "line", type: "auto", subject: "カゴ落ちリマインド", status: "opened", openedAt: "2026-02-15 10:20", clicked: true },
+  { id: 6, sentAt: "2026-02-10 08:00", channel: "email", type: "auto", subject: "再訪促進メール", status: "delivered", openedAt: null, clicked: false },
+];
+
+const BEHAVIOR_COLORS: Record<string, string> = {
+  login: "text-blue-500",
+  search: "text-purple-500",
+  view: "text-gray-500",
+  cart: "text-orange-500",
+  order: "text-green-500",
+  click: "text-blue-600",
+};
 
 export default function UserDetailPage({
   params,
@@ -263,22 +305,91 @@ export default function UserDetailPage({
 
               {/* 行動履歴タブ */}
               <TabsContent value="behavior" className="mt-0">
-                <div className="text-center py-12 text-muted-foreground">
-                  <p className="text-sm">行動履歴データはPDM回答後に接続予定</p>
-                  <p className="text-xs mt-1">
-                    ログイン日時 / ページ閲覧 / サイト内検索 / カゴ落ち
-                  </p>
+                <div className="space-y-1">
+                  {mockBehaviorLogs.map((log, idx) => {
+                    const Icon = log.icon;
+                    const prevLog = mockBehaviorLogs[idx - 1];
+                    const showDate = idx === 0 || log.timestamp.split(" ")[0] !== prevLog?.timestamp.split(" ")[0];
+
+                    return (
+                      <div key={log.id}>
+                        {showDate && (
+                          <div className="flex items-center gap-2 pt-3 pb-1">
+                            <span className="text-xs font-medium text-muted-foreground">
+                              {log.timestamp.split(" ")[0]}
+                            </span>
+                            <Separator className="flex-1" />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors">
+                          <span className="text-xs text-muted-foreground w-[45px] shrink-0">
+                            {log.timestamp.split(" ")[1]}
+                          </span>
+                          <Icon className={`h-4 w-4 shrink-0 ${BEHAVIOR_COLORS[log.type] || "text-gray-400"}`} />
+                          <span className="text-sm">{log.detail}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
+                <p className="text-xs text-muted-foreground mt-4 text-center">
+                  EC MySQL接続後にリアルデータに切り替わります
+                </p>
               </TabsContent>
 
               {/* コミュニケーション履歴タブ */}
               <TabsContent value="communication" className="mt-0">
-                <div className="text-center py-12 text-muted-foreground">
-                  <p className="text-sm">配信機能実装後に表示されます</p>
-                  <p className="text-xs mt-1">
-                    LINE / メール / SMS の送信履歴・開封状況
-                  </p>
+                <div className="space-y-2">
+                  {mockCommLogs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="flex items-center gap-3 rounded-md p-3 border hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="shrink-0">
+                        {log.channel === "line" ? (
+                          <div className="rounded-full bg-green-100 p-1.5">
+                            <MessageSquare className="h-3.5 w-3.5 text-green-600" />
+                          </div>
+                        ) : (
+                          <div className="rounded-full bg-blue-100 p-1.5">
+                            <Mail className="h-3.5 w-3.5 text-blue-600" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium truncate">{log.subject}</span>
+                          <Badge variant="outline" className="text-[10px] shrink-0">
+                            {log.type === "auto" ? "自動" : "手動"}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5">
+                          <span className="text-xs text-muted-foreground">{log.sentAt}</span>
+                          {log.status === "opened" ? (
+                            <span className="text-xs flex items-center gap-1 text-green-600">
+                              <MailOpen className="h-3 w-3" /> 開封済
+                              {log.openedAt && (
+                                <span className="text-muted-foreground">（{log.openedAt.split(" ")[1]}）</span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-xs flex items-center gap-1 text-muted-foreground">
+                              <Send className="h-3 w-3" /> 配信済
+                            </span>
+                          )}
+                          {log.clicked && (
+                            <span className="text-xs flex items-center gap-1 text-blue-600">
+                              <ExternalLink className="h-3 w-3" /> クリック
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+                <p className="text-xs text-muted-foreground mt-4 text-center">
+                  配信機能連携後にリアルデータに切り替わります
+                </p>
               </TabsContent>
             </CardContent>
           </Tabs>

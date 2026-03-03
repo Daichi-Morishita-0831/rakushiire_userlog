@@ -13,8 +13,11 @@ import {
   TrendingDown,
   ChevronLeft,
   ChevronRight,
+  LogOut,
+  User,
 } from "lucide-react";
 import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 
 const navItems = [
   { href: "/", label: "ダッシュボード", icon: LayoutDashboard },
@@ -29,6 +32,7 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { data: session } = useSession();
 
   return (
     <aside
@@ -80,17 +84,37 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* フッター */}
-      {!collapsed && (
-        <div className="border-t p-4">
-          <p className="text-xs text-muted-foreground">
-            PDM回答待ち: 4件
+      {/* ユーザー情報 & ログアウト */}
+      <div className="border-t p-3">
+        {session?.user && (
+          <div className={cn("flex items-center gap-2 mb-2", collapsed && "justify-center")}>
+            <div className="rounded-full bg-primary/10 p-1.5 shrink-0">
+              <User className="h-3.5 w-3.5 text-primary" />
+            </div>
+            {!collapsed && (
+              <div className="min-w-0">
+                <p className="text-xs font-medium truncate">{session.user.name}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{session.user.email}</p>
+              </div>
+            )}
+          </div>
+        )}
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors w-full",
+            collapsed && "justify-center px-2"
+          )}
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>ログアウト</span>}
+        </button>
+        {!collapsed && (
+          <p className="text-[10px] text-muted-foreground mt-2 px-1">
+            v0.1.0 (開発中) · PDM回答待ち: 4件
           </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            v0.1.0 (開発中)
-          </p>
-        </div>
-      )}
+        )}
+      </div>
     </aside>
   );
 }

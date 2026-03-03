@@ -27,6 +27,7 @@ import {
   CRM_STATUS_COLORS,
   type CrmStatus,
 } from "@/lib/mock-data";
+import { downloadCsv } from "@/lib/csv-export";
 import Link from "next/link";
 
 function daysSince(dateStr: string | null): string {
@@ -109,7 +110,33 @@ export default function UsersPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              downloadCsv(
+                `users_${new Date().toISOString().split("T")[0]}.csv`,
+                ["顧客コード", "店舗名", "都道府県", "住所", "ステータス", "LINE連携", "今月注文額", "注文回数", "パートナー数", "最終ログイン", "最終注文", "業態", "営業担当", "メール", "電話"],
+                filtered.map((c) => [
+                  c.customerCode,
+                  c.customerName1,
+                  c.address1,
+                  c.address2,
+                  CRM_STATUS_LABELS[c.crmStatus],
+                  c.lineConnected ? "連携済み" : "未連携",
+                  c.monthlyOrderAmount,
+                  c.monthlyOrderCount,
+                  c.partnerCount,
+                  c.lastLoginAt || "",
+                  c.lastOrderDate || "",
+                  c.shopCategory,
+                  c.salesPersonName,
+                  c.email,
+                  c.cellphone,
+                ])
+              );
+            }}
+          >
             <Download className="h-4 w-4 mr-1" /> CSV
           </Button>
           <Button size="sm">
