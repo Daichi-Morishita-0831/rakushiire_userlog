@@ -1,0 +1,300 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// EC MySQL テーブル（既存 rakushiire.com のテーブル構造に準拠）
+// ============================================================
+
+model Account {
+  id                    Int       @id @default(autoincrement())
+  email                 String    @unique
+  password              String
+  username              String?
+  cellphone             String?
+  emailVerifiedAt       DateTime? @map("email_verified_at")
+  latestCustomerId      Int?      @map("latest_customer_id")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  deletedAt             DateTime? @map("deleted_at")
+
+  accountCustomers      AccountCustomer[]
+  socialiteProviders    SocialiteProvider[]
+
+  @@map("accounts")
+}
+
+model Customer {
+  id                          Int       @id @default(autoincrement())
+  idx                         String    @unique @default(uuid())
+  customerCode                String    @unique @map("customer_code")
+  customerName1               String    @map("customer_name1")
+  customerName2               String?   @map("customer_name2")
+  email                       String?
+  telephone                   String?
+  cellphone                   String?
+  cellphone2                  String?   @map("cellphone_2")
+  postalCode                  String?   @map("postal_code")
+  address1                    String?
+  address2                    String?
+  address3                    String?
+  partnerCode                 String?   @map("partner_code")
+  status                      String    @default("ec_temporary_register")
+  startTradingDate            DateTime? @map("start_trading_date")
+  estimatedMonthlyAmount      Int?      @map("estimated_monthly_amount")
+  salesPersonCode             String?   @map("sales_person_code")
+  salesPersonName             String?   @map("sales_person_name")
+  shopCategory                String?   @map("shop_category")
+  restaurantCategoryId        Int?      @map("restaurant_category_id")
+  rankClassificationId        Int?      @map("rank_classification_id")
+  isRegisteredFromEc          Boolean   @default(false) @map("is_registered_from_ec")
+  isFromFlyer                 Boolean   @default(false) @map("is_from_flyer")
+  creditLimit                 Int?      @map("credit_limit")
+  customerNote                String?   @map("customer_note") @db.Text
+  transactionCancellationMonth Int?     @map("transaction_cancellation_month")
+  transactionTrustMonth       Int?      @map("transaction_trust_month")
+  createdAt                   DateTime  @default(now()) @map("created_at")
+  updatedAt                   DateTime  @updatedAt @map("updated_at")
+  deletedAt                   DateTime? @map("deleted_at")
+
+  partner                     BusinessPartner? @relation(fields: [partnerCode], references: [code])
+  accountCustomers            AccountCustomer[]
+  smileOrders                 SmileOrder[]
+  carts                       Cart[]
+
+  @@map("customer")
+}
+
+model AccountCustomer {
+  id              Int     @id @default(autoincrement())
+  accountId       Int     @map("account_id")
+  customerId      Int     @map("customer_id")
+  isMainCustomer  Boolean @default(false) @map("is_main_customer")
+  username        String?
+  cellphone       String?
+
+  account         Account  @relation(fields: [accountId], references: [id])
+  customer        Customer @relation(fields: [customerId], references: [id])
+
+  @@unique([accountId, customerId])
+  @@map("account_customers")
+}
+
+model SocialiteProvider {
+  id          Int       @id @default(autoincrement())
+  provider    String
+  providerId  String    @map("provider_id")
+  accountId   Int       @map("account_id")
+  isFriend    Boolean   @default(false) @map("is_friend")
+  avatar      String?
+  email       String?
+  firstname   String?
+  lastname    String?
+  nickname    String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  account     Account   @relation(fields: [accountId], references: [id])
+
+  @@map("socialite_providers")
+}
+
+model BusinessPartner {
+  id                    Int       @id @default(autoincrement())
+  code                  String    @unique
+  name                  String
+  type                  String    @default("children")
+  parentId              Int?      @map("parent_id")
+  lineOfficialAccount   String?   @map("line_official_account")
+  orderCutoffTime       String?   @map("order_cutoff_time")
+  isDisplaySearchEc     Boolean   @default(true) @map("is_display_search_ec")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  deletedAt             DateTime? @map("deleted_at")
+
+  parent                BusinessPartner?  @relation("PartnerHierarchy", fields: [parentId], references: [id])
+  children              BusinessPartner[] @relation("PartnerHierarchy")
+  customers             Customer[]
+  smileOrders           SmileOrder[]
+  morikiProducts        MorikiProduct[]
+
+  @@map("business_partner")
+}
+
+model SmileOrder {
+  id                  Int       @id @default(autoincrement())
+  orderNumber         String    @unique @map("order_number")
+  customerCode        String    @map("customer_code")
+  deliveryDate        DateTime  @map("delivery_date")
+  businessPartnerId   Int       @map("business_partner_id")
+  quantity            Decimal?  @db.Decimal(10, 2)
+  quantityUnit        String?   @map("quantity_unit")
+  kgQuantity          Decimal?  @map("kg_quantity") @db.Decimal(10, 2)
+  unitPrice           Int?      @map("unit_price")
+  amount              Int?
+  totalAmount         Int?      @map("total_amount")
+  subTotal            Int?      @map("sub_total")
+  discount            Int?      @default(0)
+  shippingFee         Int?      @map("shipping_fee") @default(0)
+  status              String    @default("pending")
+  orderType           String?   @map("order_type")
+  createdFrom         String?   @map("created_from")
+  accountId           Int?      @map("account_id")
+  courseId             Int?      @map("course_id")
+  note                String?   @db.Text
+  deliveryMemo        String?   @map("delivery_memo") @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  deletedAt           DateTime? @map("deleted_at")
+
+  customer            Customer        @relation(fields: [customerCode], references: [customerCode])
+  businessPartner     BusinessPartner @relation(fields: [businessPartnerId], references: [id])
+  orderItems          OrderItem[]
+
+  @@map("orders_smileorder")
+}
+
+model OrderItem {
+  id              Int       @id @default(autoincrement())
+  orderId         Int       @map("order_id")
+  productId       Int       @map("product_id")
+  productName     String    @map("product_name")
+  quantity        Decimal   @db.Decimal(10, 2)
+  unitPrice       Int       @map("unit_price")
+  amount          Int
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  order           SmileOrder    @relation(fields: [orderId], references: [id])
+  product         MorikiProduct @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Cart {
+  id                  Int       @id @default(autoincrement())
+  customerId          Int       @map("customer_id")
+  accountCustomerId   Int?      @map("account_customer_id")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  customer            Customer    @relation(fields: [customerId], references: [id])
+  cartOrders          CartOrder[]
+
+  @@map("carts")
+}
+
+model CartOrder {
+  id                  Int       @id @default(autoincrement())
+  cartId              Int       @map("cart_id")
+  businessPartnerId   Int       @map("business_partner_id")
+  deliveryDate        DateTime? @map("delivery_date")
+  shippingFee         Int?      @map("shipping_fee") @default(0)
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  cart                Cart        @relation(fields: [cartId], references: [id])
+  cartItems           CartItem[]
+
+  @@map("cart_orders")
+}
+
+model CartItem {
+  id              Int       @id @default(autoincrement())
+  cartOrderId     Int       @map("cart_order_id")
+  productId       Int       @map("product_id")
+  quantity        Decimal   @db.Decimal(10, 2)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  cartOrder       CartOrder     @relation(fields: [cartOrderId], references: [id])
+  product         MorikiProduct @relation(fields: [productId], references: [id])
+
+  @@map("cart_items")
+}
+
+model MorikiProduct {
+  id                            Int       @id @default(autoincrement())
+  productSystemCode             String?   @map("product_system_code")
+  inHouseManagedProductCode     String?   @map("in_house_managed_product_code")
+  productName                   String    @map("product_name")
+  productNameFurigana           String?   @map("product_name_furigana")
+  partnerCode                   String    @map("partner_code")
+  foodMajorClassificationName   String?   @map("food_major_classification_name")
+  foodMediumClassificationName  String?   @map("food_medium_classification_name")
+  retailUnitPrice               Int?      @map("retail_unit_price")
+  referenceWholesalePrice       Int?      @map("reference_wholesale_price")
+  sellingDiscontinued           Boolean   @default(false) @map("selling_discontinued")
+  createdAt                     DateTime  @default(now()) @map("created_at")
+  updatedAt                     DateTime  @updatedAt @map("updated_at")
+  deletedAt                     DateTime? @map("deleted_at")
+
+  businessPartner               BusinessPartner @relation(fields: [partnerCode], references: [code])
+  orderItems                    OrderItem[]
+  cartItems                     CartItem[]
+
+  @@map("business_partner_morikiproduct")
+}
+
+// ============================================================
+// CRM独自テーブル（新規作成）
+// ============================================================
+
+model Segment {
+  id          Int       @id @default(autoincrement())
+  name        String
+  type        String    @default("dynamic") // dynamic | static
+  conditions  Json
+  memberCount Int       @default(0) @map("member_count")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  deliveries  Delivery[]
+
+  @@map("crm_segments")
+}
+
+model Delivery {
+  id          Int       @id @default(autoincrement())
+  type        String    // manual | auto
+  channel     String    // line | email | sms
+  segmentId   Int?      @map("segment_id")
+  subject     String?
+  message     String    @db.Text
+  status      String    @default("draft") // draft | scheduled | sent | failed
+  sentAt      DateTime? @map("sent_at")
+  scheduledAt DateTime? @map("scheduled_at")
+  sentCount   Int       @default(0) @map("sent_count")
+  openRate    Decimal?  @map("open_rate") @db.Decimal(5, 2)
+  clickRate   Decimal?  @map("click_rate") @db.Decimal(5, 2)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  segment     Segment?  @relation(fields: [segmentId], references: [id])
+
+  @@map("crm_deliveries")
+}
+
+model AutomationRule {
+  id              Int       @id @default(autoincrement())
+  name            String
+  triggerType     String    @map("trigger_type")
+  triggerConfig   Json      @map("trigger_config")
+  actionChannel   String    @map("action_channel")
+  actionMessage   String    @map("action_message") @db.Text
+  actionDelay     Int       @default(0) @map("action_delay")
+  cooldownDays    Int       @default(7) @map("cooldown_days")
+  isActive        Boolean   @default(false) @map("is_active")
+  executionCount  Int       @default(0) @map("execution_count")
+  lastExecutedAt  DateTime? @map("last_executed_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("crm_automation_rules")
+}

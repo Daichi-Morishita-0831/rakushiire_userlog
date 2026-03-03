@@ -1,58 +1,36 @@
-# rakushiire-crm
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-rakushiire.com ユーザー行動管理 & コミュニケーションツール
+## Getting Started
 
-## 概要
+First, run the development server:
 
-rakushiire.com のユーザー行動データを日次で収集・可視化し、CRMチームが手動/自動でコミュニケーション（LINE・メール・SMS）を送れる管理ツール。
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-## ドキュメント
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-- [仕様書](docs/spec.md) - システム全体の仕様
-- [画面設計](docs/screens.md) - 各画面の詳細設計（全7画面）
-- [開発計画](docs/development-plan.md) - Phase別の開発ロードマップ
-- [技術調査結果](docs/technical-findings.md) - 既存システム調査の詳細レポート
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## 技術スタック（既存システム）
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-| 項目 | 技術 |
-|------|------|
-| バックエンド | PHP 8.2 / Laravel 11 / Laravel Sanctum |
-| ECフロントエンド | Next.js 14 / React 18 / TypeScript |
-| EC DB | MySQL 8.0 |
-| 管理画面 DB | PostgreSQL 13 |
-| 操作ログ DB | AWS DocumentDB（MongoDB互換） |
-| メール配信 | AWS SES |
-| リアルタイム通知 | Pusher WebSocket |
-| ストレージ | AWS S3 |
-| キュー | AWS SQS |
-| LINE | OAuth Social Login（2アカウント）/ Liny |
+## Learn More
 
-## 関連サービス
+To learn more about Next.js, take a look at the following resources:
 
-| サービス | URL | 用途 |
-|---------|-----|------|
-| rakushiire.com | https://rakushiire.com/ | 顧客向けサービス（LP） |
-| vege-tal.com | https://vege-tal.com/login | 管理画面（BPaaS） |
-| Kintone | - | 対応履歴蓄積 |
-| Liny | - | LINE配信管理 |
-| GA4 | - | アクセス解析 |
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## ソースコード（既存システム）
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-| リポジトリ | 用途 |
-|-----------|------|
-| Kozocom/vegekul-EC-backend | ECサイトバックエンド |
-| Kozocom/vegekul-EC-frontend | ECサイトフロントエンド |
-| Kozocom/vegekul-BPaaS-backend | 管理画面バックエンド |
-| Kozocom/vegekul-BPaaS-frontend | 管理画面フロントエンド |
-| Kozocom/vegekul-activitylog-backend | 操作ログ管理 |
-| Kozocom/vegekul-PDF-backend | PDF生成 |
-| Kozocom/vegekul-pm-docs | プロジェクト管理ドキュメント |
+## Deploy on Vercel
 
-## 現在のステータス
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-- ✅ 仕様確定（全7画面）
-- ✅ 技術調査完了（2026-03-03）
-- ⏳ PDMへの残確認事項あり（Liny API、検索KW保存先、DB参照方法）
-- ⏳ CRM技術スタック選定待ち
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
