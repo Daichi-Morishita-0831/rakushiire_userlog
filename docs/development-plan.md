@@ -4,43 +4,78 @@
 
 | Phase | 内容 | 前提条件 |
 |-------|------|---------|
-| Phase 1 | CRM基本機能 | エンジニアからの技術情報回答 |
+| Phase 1 | CRM基本機能 | 技術調査完了（✅ 2026-03-03） |
 | Phase 2 | AIレコメンド + サイト内バナー + テンプレート | Phase 1完了 |
+
+---
+
+## 技術スタック（確定: 2026-03-03）
+
+既存システムとの整合性を考慮した構成:
+
+| 項目 | 既存システム | CRM候補 |
+|------|------------|---------|
+| バックエンド | PHP 8.2 / Laravel 11 | Laravel 11（統一） |
+| フロントエンド | Next.js 14 / React 18 | React 18 + Vite or Next.js 14 |
+| DB | MySQL 8.0（EC） / PostgreSQL 13（BPaaS） | 要決定 |
+| 認証 | Laravel Sanctum | Laravel Sanctum |
+| メール配信 | AWS SES | AWS SES |
+| キュー | AWS SQS | AWS SQS |
+| ストレージ | AWS S3 | AWS S3 |
+| SMS | なし（新規導入必要） | 要選定 |
+| LINE | Liny（API連携可否未確認） | Liny API or 直接API |
+
+詳細は [technical-findings.md](technical-findings.md) を参照。
 
 ---
 
 ## Phase 1: CRM基本機能
 
-### Step 1: 技術調査・設計（エンジニア回答待ち）
+### Step 1: 技術調査・設計 ✅ 完了
 
-**エンジニアに確認中の項目：**
-- [ ] rakushiire.com の技術スタック（言語・フレームワーク・DB・ホスティング）
-- [ ] ユーザー行動ログの記録状況
-- [ ] 注文データのテーブル構造
-- [ ] 外部API（内部API含む）の有無
-- [ ] メール配信サービス名
-- [ ] SMS配信サービス名
+**GitHub調査（2026-03-03 完了）:**
+- [x] rakushiire.com の技術スタック → PHP 8.2 / Laravel 11 / MySQL 8.0 / Next.js 14
+- [x] ユーザー行動ログ → 管理画面操作ログのみ。EC側ページ閲覧等はなし
+- [x] 注文データのテーブル構造 → SmileOrder / OrderItem で把握済み
+- [x] 外部API → EC-backend: 90+ REST API、Sanctum認証
+- [x] メール配信サービス → AWS SES
+- [x] SMS配信サービス → なし（FAXのみ: Faximo）
+- [x] LINEユーザーIDの紐づけ → SocialiteProvider.provider_id で紐付き済み
+
+**PDMに要確認（残件）:**
 - [ ] Liny API連携可否
-- [ ] LINEユーザーIDとサイト内ユーザーIDの紐づけ
+- [ ] EC_SEARCH_KEYWORD_QUEUEの処理先
+- [ ] ECサイトのログイン日時記録有無
+- [ ] CRMからEC DBを直接参照可能か
 
-**回答後に決定すること：**
-- CRMツールの技術スタック選定
+**回答後に決定すること:**
+- CRMツールのDB選定（MySQL or PostgreSQL）
 - データ取得方法（API / DB直接 / バッチ処理）
-- 外部サービス連携方法
+- SMS配信サービスの選定
+- Liny連携方法
 
 ### Step 2: データ基盤構築
 
-- rakushiire.com からのデータ取得バッチ処理
+- EC-backend MySQL からの日次データ取得バッチ処理
+  - Customer テーブル（顧客情報・ステータス）
+  - SmileOrder / OrderItem テーブル（注文データ）
+  - Cart / CartOrder / CartItem テーブル（カゴ落ち検知）
+  - SocialiteProvider テーブル（LINE連携状況）
+  - BusinessPartner テーブル（パートナー情報）
+  - MorikiProduct / EcProduct テーブル（商品情報）
 - CRM用データベース設計・構築
-- 日次バッチの仕組み構築
+- 日次バッチの仕組み構築（AWS SQS活用）
+- **新規**: ユーザー行動トラッキング基盤の構築
+  - EC-frontend にトラッキングJS追加 or GA4 Data API連携
+  - ページ閲覧・滞在時間・流入元の記録
 
 ### Step 3: 管理画面 - 閲覧系
 
-| 画面 | 内容 |
-|------|------|
-| ダッシュボード | KPIカード・グラフ・アクションリスト・離反/新規分析 |
-| ユーザー一覧 | 検索・フィルタ・ソート |
-| ユーザー詳細 | 注文履歴・行動履歴・コミュニケーション履歴 |
+| 画面 | 内容 | データソース |
+|------|------|-------------|
+| ダッシュボード | KPIカード・グラフ・アクションリスト・離反/新規分析 | SmileOrder, Customer |
+| ユーザー一覧 | 検索・フィルタ・ソート | Customer, Account, SocialiteProvider |
+| ユーザー詳細 | 注文履歴・行動履歴・コミュニケーション履歴 | SmileOrder, Cart, ActivityLog |
 
 ### Step 4: 管理画面 - セグメント・配信系
 
@@ -59,8 +94,8 @@
 ### Step 6: 外部連携
 
 - Kintone連携（対応履歴・行動データ・コミュニケーション履歴の蓄積）
-- GA4連携（流入元データの取得）
-- Liny連携（LINE配信トリガー・タグ連携）
+- GA4連携（流入元データ・ページ閲覧・滞在時間の取得）
+- Liny連携（LINE配信トリガー・タグ連携）※ API可否確認後
 
 ---
 
@@ -105,11 +140,43 @@
 
 ---
 
-## 未決定事項
+## ギャップ分析（既存 vs CRM要件）
+
+### 利用可能なデータ ✅
+
+| データ | ソース | テーブル/モデル |
+|--------|--------|---------------|
+| 顧客情報 | EC MySQL | Customer |
+| 注文履歴 | EC MySQL | SmileOrder / OrderItem |
+| カート（カゴ落ち） | EC MySQL | Cart / CartOrder / CartItem |
+| LINE連携 | EC MySQL | SocialiteProvider |
+| パートナー情報 | EC MySQL | BusinessPartner |
+| 商品情報 | EC MySQL | MorikiProduct / EcProduct / CommonProduct |
+| 顧客ステータス変遷 | ActivityLog DocumentDB | ActivityLog (feature=CUSTOMER) |
+
+### 不足データ ❌（新規開発/連携が必要）
+
+| データ | 現状 | 対策案 | 優先度 |
+|--------|------|--------|--------|
+| ページ閲覧ログ | なし | GA4連携 or EC-frontendにJS追加 | 高 |
+| サイト内検索KW | SQSキューあり（保存先不明） | PDMに確認 → 既存処理を活用 | 高 |
+| ECログイン日時 | 専用カラムなし | ログインAPI処理時に記録追加 | 高 |
+| 滞在時間 | なし | GA4連携 | 中 |
+| 流入元 | なし | GA4連携 | 中 |
+| SMS配信基盤 | なし | 新規サービス導入 | 中 |
+
+---
+
+## 決定事項・未決定事項
 
 | 項目 | 状態 | 決定タイミング |
 |------|------|--------------|
-| CRMツールの技術スタック | 未決定 | エンジニア回答後 |
-| データ取得方法 | 未決定 | エンジニア回答後 |
-| モバイル対応 | 不要と確定 | - |
+| 既存技術スタック | ✅ 調査完了 | 2026-03-03 |
+| メール配信サービス | ✅ AWS SES | 2026-03-03 |
+| LINE UID紐づけ | ✅ SocialiteProvider.provider_id | 2026-03-03 |
+| CRM用DB選定 | 未決定 | PDM回答後 |
+| データ取得方法 | 未決定 | PDM回答後 |
+| SMS配信サービス | 未決定（新規導入必要） | Phase 1開始時 |
+| Liny連携方法 | 未決定（API可否未確認） | PDM回答後 |
+| モバイル対応 | ✅ 不要と確定 | - |
 | AIレコメンドの技術選定 | 未決定 | Phase 2開始時 |
