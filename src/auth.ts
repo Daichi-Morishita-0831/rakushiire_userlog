@@ -1,5 +1,25 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { verifyPassword } from "@/lib/auth-utils";
+
+// --- Mock users (development only) ---
+// DB接続後は prisma.account.findUnique() に置き換え
+const MOCK_USERS = [
+  {
+    id: "1",
+    email: "admin@rakushiire.com",
+    hashedPassword: "$2b$12$RmQ3MYN6JWvS5pSYW0L1seYcMcJKQut7iirgfRm8WpM2F/ipguMay", // admin123
+    name: "管理者",
+    role: "admin",
+  },
+  {
+    id: "2",
+    email: "sales@rakushiire.com",
+    hashedPassword: "$2b$12$F6pOz5ywrpPAk2sQ.DqMMu60hsifccw085IuSieBs2iQVxggkIL.q", // sales123
+    name: "営業担当",
+    role: "sales",
+  },
+];
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -10,21 +30,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "パスワード", type: "password" },
       },
       async authorize(credentials) {
-        // Development mock auth — replace with real DB lookup later
-        const mockUsers = [
-          { id: "1", email: "admin@rakushiire.com", password: "admin123", name: "管理者", role: "admin" },
-          { id: "2", email: "sales@rakushiire.com", password: "sales123", name: "営業担当", role: "sales" },
-        ];
-        const user = mockUsers.find(
-          (u) => u.email === credentials?.email && u.password === credentials?.password
-        );
+        const email = credentials?.email as string | undefined;
+        const password = credentials?.password as string | undefined;
+
+        if (!email || !password) return null;
+
+        // --- DB接続後のコード ---
+        // const account = await prisma.account.findUnique({ where: { email } });
+        // if (!account || account.deletedAt) return null;
+        // const valid = await verifyPassword(password, account.password);
+        // if (!valid) return null;
+        // return { id: String(account.id), email: account.email, name: account.username, role: "sales" };
+
+        // --- Mock auth（開発用）---
+        const user = MOCK_USERS.find((u) => u.email === email);
         if (!user) return null;
+
+        const valid = await verifyPassword(password, user.hashedPassword);
+        if (!valid) return null;
+
         return { id: user.id, email: user.email, name: user.name, role: user.role };
       },
     }),
   ],
   pages: {
     signIn: "/login",
+  },
+  session: {
+    strategy: "jwt",
+    maxAge: 8 * 60 * 60, // 8時間（業務時間中のみ有効）
   },
   callbacks: {
     authorized({ auth: session, request: { nextUrl } }) {
@@ -38,13 +72,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     jwt({ token, user }) {
       if (user) {
-        token.role = (user as { role?: string }).role;
+        token.role = user.role;
       }
       return token;
     },
     session({ session, token }) {
       if (session.user) {
-        (session.user as { role?: string }).role = token.role as string;
+        session.user.role = token.role;
       }
       return session;
     },

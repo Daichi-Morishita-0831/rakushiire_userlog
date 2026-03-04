@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LogIn, Loader2 } from "lucide-react";
 
+const isDev = process.env.NODE_ENV === "development";
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -54,10 +56,11 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@rakushiire.com"
+                placeholder="user@rakushiire.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -71,6 +74,8 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
+                minLength={6}
               />
             </div>
 
@@ -90,13 +95,15 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 rounded-md bg-muted p-3">
-            <p className="text-xs font-medium text-muted-foreground mb-2">開発用アカウント</p>
-            <div className="space-y-1 text-xs text-muted-foreground">
-              <p>管理者: admin@rakushiire.com / admin123</p>
-              <p>営業: sales@rakushiire.com / sales123</p>
+          {isDev && (
+            <div className="mt-6 rounded-md bg-amber-50 border border-amber-200 p-3">
+              <p className="text-xs font-medium text-amber-700 mb-2">開発用アカウント</p>
+              <div className="space-y-1 text-xs text-amber-600">
+                <p>管理者: admin@rakushiire.com / admin123</p>
+                <p>営業: sales@rakushiire.com / sales123</p>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

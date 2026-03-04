@@ -91,9 +91,8 @@ export async function sendLinyRequest(
 }
 
 /**
- * 接続テスト — ドライランで認証を確認
- * ※ 実際にはLiny APIにテスト用エンドポイントがないため、
- *    設定値の存在チェック + エンドポイントの疎通確認のみ
+ * 接続テスト — 実際にHTTPリクエストを送って疎通確認
+ * エンドポイントへの到達性 + 認証ヘッダーの有効性を検証
  */
 export async function testLinyConnection(config?: LinyConfig): Promise<LinyApiResult> {
   const linyConfig = config || getLinyConfig();
@@ -124,37 +123,97 @@ export async function testLinyConnection(config?: LinyConfig): Promise<LinyApiRe
     };
   }
 
-  return {
-    success: true,
-    statusCode: 200,
-  };
+  // 実際にエンドポイントへ疎通確認（空ペイロードでPOST）
+  // Liny APIはWebhook型のため、uid無しだとアクション未実行で完了する想定
+  try {
+    const response = await fetch(linyConfig.endpointUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${linyConfig.apiToken}`,
+      },
+      body: JSON.stringify({ _test: true }),
+      signal: AbortSignal.timeout(10000), // 10秒タイムアウト
+    });
+
+    // 認証エラー
+    if (response.status === 401 || response.status === 403) {
+      return {
+        success: false,
+        statusCode: response.status,
+        error: `認証エラー (${response.status}): トークンが無効です`,
+      };
+    }
+
+    // 404はエンドポイントURLが間違っている
+    if (response.status === 404) {
+      return {
+        success: false,
+        statusCode: 404,
+        error: "エンドポイントが見つかりません。URLを確認してください",
+      };
+    }
+
+    // 2xx or 422（バリデーションエラー=到達＆認証OK）は成功とみなす
+    if (response.ok || response.status === 422) {
+      return { success: true, statusCode: response.status };
+    }
+
+    return {
+      success: false,
+      statusCode: response.status,
+      error: `予期しないレスポンス (${response.status})`,
+    };
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "TimeoutError") {
+      return { success: false, error: "タイムアウト: 10秒以内にレスポンスがありません" };
+    }
+    return {
+      success: false,
+      error: `接続エラー: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
 }
 
 /**
  * バッチ送信 — 複数友だちに対してLinyアクションを発動
+ * レート制限: 同時実行5件、各バッチ間200msスリープ
  */
 export async function sendLinyBatchRequest(
   payloads: LinyRequestPayload[],
-  config?: LinyConfig
+  config?: LinyConfig,
+  options?: { concurrency?: number; delayMs?: number }
 ): Promise<{ total: number; success: number; failed: number; errors: string[] }> {
-  const results = await Promise.allSettled(
-    payloads.map((payload) => sendLinyRequest(payload, config))
-  );
+  const concurrency = options?.concurrency ?? 5;
+  const delayMs = options?.delayMs ?? 200;
 
   const errors: string[] = [];
   let successCount = 0;
   let failedCount = 0;
 
-  for (const result of results) {
-    if (result.status === "fulfilled" && result.value.success) {
-      successCount++;
-    } else {
-      failedCount++;
-      if (result.status === "fulfilled" && result.value.error) {
-        errors.push(result.value.error);
-      } else if (result.status === "rejected") {
-        errors.push(String(result.reason));
+  // チャンクに分割して順次実行
+  for (let i = 0; i < payloads.length; i += concurrency) {
+    const chunk = payloads.slice(i, i + concurrency);
+    const results = await Promise.allSettled(
+      chunk.map((payload) => sendLinyRequest(payload, config))
+    );
+
+    for (const result of results) {
+      if (result.status === "fulfilled" && result.value.success) {
+        successCount++;
+      } else {
+        failedCount++;
+        if (result.status === "fulfilled" && result.value.error) {
+          errors.push(result.value.error);
+        } else if (result.status === "rejected") {
+          errors.push(String(result.reason));
+        }
       }
+    }
+
+    // レート制限: 最後のチャンク以外はスリープ
+    if (i + concurrency < payloads.length) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
 
