@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import ChurnClient from "./churn-client";
+
+export const metadata: Metadata = { title: "離反/新規分析" };
 import {
   getChurnCustomers,
   getNewCustomers,

@@ -16,7 +16,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ラクシーレ CRM",
+  title: {
+    default: "ラクシーレ CRM",
+    template: "%s | ラクシーレ CRM",
+  },
   description: "rakushiire.com CRM管理ツール",
 };
 

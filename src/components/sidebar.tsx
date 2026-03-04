@@ -20,21 +20,29 @@ import {
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 
-const navItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  roles?: string[]; // 未指定=全ロールに表示
+};
+
+const navItems: NavItem[] = [
   { href: "/", label: "ダッシュボード", icon: LayoutDashboard },
   { href: "/users", label: "ユーザー一覧", icon: Users },
   { href: "/churn", label: "離反/新規分析", icon: TrendingDown },
-  { href: "/segments", label: "セグメント", icon: Filter },
+  { href: "/segments", label: "セグメント", icon: Filter, roles: ["admin"] },
   { href: "/delivery", label: "手動配信", icon: Send },
-  { href: "/automation", label: "自動配信", icon: Zap },
+  { href: "/automation", label: "自動配信", icon: Zap, roles: ["admin"] },
   { href: "/history", label: "配信履歴", icon: History },
-  { href: "/settings", label: "設定", icon: Settings },
+  { href: "/settings", label: "設定", icon: Settings, roles: ["admin"] },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const { data: session } = useSession();
+  const userRole = session?.user?.role ?? "sales";
 
   return (
     <aside
@@ -63,7 +71,9 @@ export function Sidebar() {
 
       {/* ナビゲーション */}
       <nav className="flex-1 space-y-1 px-2 py-3">
-        {navItems.map((item) => {
+        {navItems
+          .filter((item) => !item.roles || item.roles.includes(userRole))
+          .map((item) => {
           const isActive =
             item.href === "/"
               ? pathname === "/"
@@ -95,7 +105,12 @@ export function Sidebar() {
             </div>
             {!collapsed && (
               <div className="min-w-0">
-                <p className="text-xs font-medium truncate">{session.user.name}</p>
+                <p className="text-xs font-medium truncate">
+                  {session.user.name}
+                  {userRole === "admin" && (
+                    <span className="ml-1 text-[9px] bg-primary/10 text-primary px-1 rounded">管理者</span>
+                  )}
+                </p>
                 <p className="text-[10px] text-muted-foreground truncate">{session.user.email}</p>
               </div>
             )}
