@@ -15,6 +15,7 @@ import {
   ChevronRight,
   LogOut,
   User,
+  Settings,
 } from "lucide-react";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
@@ -27,6 +28,7 @@ const navItems = [
   { href: "/delivery", label: "手動配信", icon: Send },
   { href: "/automation", label: "自動配信", icon: Zap },
   { href: "/history", label: "配信履歴", icon: History },
+  { href: "/settings", label: "設定", icon: Settings },
 ];
 
 export function Sidebar() {

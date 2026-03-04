@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Zap, Clock, Power, PowerOff, Trash2, Pencil } from "lucide-react";
+import { Plus, Zap, Clock, Power, PowerOff, Trash2, Pencil, Tag, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import type { AutomationRule } from "@/lib/actions/automation";
 
@@ -63,6 +63,9 @@ export default function AutomationPage() {
   const [formDelayMinutes, setFormDelayMinutes] = useState(0);
   const [formCooldown, setFormCooldown] = useState(14);
   const [formMessage, setFormMessage] = useState("");
+  // Linyアクション
+  const [formLinyTagAdd, setFormLinyTagAdd] = useState("");
+  const [formLinyScenario, setFormLinyScenario] = useState(false);
 
   const resetForm = () => {
     setFormName("");
@@ -72,6 +75,8 @@ export default function AutomationPage() {
     setFormDelayMinutes(0);
     setFormCooldown(14);
     setFormMessage("");
+    setFormLinyTagAdd("");
+    setFormLinyScenario(false);
     setEditingRule(null);
   };
 
@@ -366,6 +371,40 @@ export default function AutomationPage() {
                 </Badge>
               </div>
             </div>
+
+            {/* Linyアクション */}
+            {formChannels.includes("line") && (
+              <div className="space-y-3 rounded-lg border border-green-200 bg-green-50/50 p-4">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-full bg-[#00B900]/10 p-1">
+                    <Tag className="h-3.5 w-3.5 text-[#00B900]" />
+                  </div>
+                  <p className="text-sm font-medium">Linyアクション</p>
+                  <Badge variant="outline" className="text-[10px] bg-green-100 text-green-700 border-green-200">API連携</Badge>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="liny-tag">タグ付与（カンマ区切りで複数指定可）</Label>
+                  <Input
+                    id="liny-tag"
+                    value={formLinyTagAdd}
+                    onChange={(e) => setFormLinyTagAdd(e.target.value)}
+                    placeholder="例: 離反リスク, 30日未注文"
+                    className="bg-white"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="liny-scenario"
+                    checked={formLinyScenario}
+                    onCheckedChange={(v) => setFormLinyScenario(v === true)}
+                  />
+                  <Label htmlFor="liny-scenario" className="flex items-center gap-1.5 cursor-pointer">
+                    <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                    Linyシナリオを起動する
+                  </Label>
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
