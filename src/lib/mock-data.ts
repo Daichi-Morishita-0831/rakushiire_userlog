@@ -1,92 +1,22 @@
 // モックデータ（EC MySQL接続前の開発用）
-// 実際のテーブル構造に準拠した型定義とサンプルデータ
+// DB接続時はこのファイルを削除し、Server Actions内でPrismaクエリに置き換える
 
-export type CustomerStatus =
-  | "ec_temporary_register"
-  | "manual_register"
-  | "waiting_for_register"
-  | "pre_transaction"
-  | "in_transaction"
-  | "delivery_stop"
-  | "stop";
+import type { CrmCustomer, CrmOrder, CrmPartner } from "@/lib/types";
 
-export const STATUS_LABELS: Record<CustomerStatus, string> = {
-  ec_temporary_register: "EC仮登録",
-  manual_register: "手動登録",
-  waiting_for_register: "登録待ち",
-  pre_transaction: "取引前",
-  in_transaction: "取引中",
-  delivery_stop: "配送停止",
-  stop: "停止",
-};
+// Re-export types and constants from types.ts for backward compatibility
+export {
+  type CustomerStatus,
+  type CrmStatus,
+  STATUS_LABELS,
+  STATUS_COLORS,
+  CRM_STATUS_LABELS,
+  CRM_STATUS_COLORS,
+} from "@/lib/types";
 
-export const STATUS_COLORS: Record<CustomerStatus, string> = {
-  ec_temporary_register: "bg-gray-100 text-gray-700",
-  manual_register: "bg-gray-100 text-gray-700",
-  waiting_for_register: "bg-yellow-100 text-yellow-700",
-  pre_transaction: "bg-blue-100 text-blue-700",
-  in_transaction: "bg-green-100 text-green-700",
-  delivery_stop: "bg-orange-100 text-orange-700",
-  stop: "bg-red-100 text-red-700",
-};
-
-// CRM独自のステータス（離反分析用）
-export type CrmStatus = "active" | "churn_risk" | "churned" | "new";
-
-export const CRM_STATUS_LABELS: Record<CrmStatus, string> = {
-  active: "アクティブ",
-  churn_risk: "離反リスク",
-  churned: "離反",
-  new: "新規",
-};
-
-export const CRM_STATUS_COLORS: Record<CrmStatus, string> = {
-  active: "bg-green-100 text-green-700",
-  churn_risk: "bg-orange-100 text-orange-700",
-  churned: "bg-red-100 text-red-700",
-  new: "bg-blue-100 text-blue-700",
-};
-
-export interface MockCustomer {
-  id: number;
-  customerCode: string;
-  customerName1: string;
-  address1: string;
-  address2: string;
-  status: CustomerStatus;
-  crmStatus: CrmStatus;
-  lineConnected: boolean;
-  lastLoginAt: string | null;
-  lastOrderDate: string | null;
-  monthlyOrderAmount: number;
-  monthlyOrderCount: number;
-  partnerCount: number;
-  salesPersonName: string;
-  shopCategory: string;
-  startTradingDate: string;
-  email: string;
-  cellphone: string;
-}
-
-export interface MockOrder {
-  id: number;
-  orderNumber: string;
-  customerCode: string;
-  deliveryDate: string;
-  partnerName: string;
-  productName: string;
-  amount: number;
-  totalAmount: number;
-  status: string;
-  orderType: string;
-}
-
-export interface MockPartner {
-  id: number;
-  code: string;
-  name: string;
-  type: "parent" | "children";
-}
+// Type aliases for backward compatibility (mock-data specific names)
+export type MockCustomer = CrmCustomer;
+export type MockOrder = CrmOrder;
+export type MockPartner = CrmPartner;
 
 // パートナーデータ
 export const mockPartners: MockPartner[] = [

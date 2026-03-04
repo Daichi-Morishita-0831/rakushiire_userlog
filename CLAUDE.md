@@ -1,61 +1,106 @@
 # rakushiire-crm
 
-## プロジェクト概要
-rakushiire.com のユーザー行動を可視化し、CRMチームがコミュニケーション（LINE/メール/SMS）を送れる管理ツール。
+## Overview
+ラクシーレ（rakushiire.com）のCRM管理ツール。飲食店向けB2B卸売ECの顧客行動を可視化し、LINE/メール/SMSでターゲティング配信を実現する。
 
-## 関連サービス
-- rakushiire.com: 顧客向けサービス（飲食店向け仕入れ最適化）
-- vege-tal.com: 既存管理画面（BPaaS）
-- Kintone: 対応履歴蓄積（既存利用中）
-- Liny: LINE配信管理（既存利用中・友だち5,772人）
-- GA4: アクセス解析（導入済み）
+## Tech Stack
+- **Framework**: Next.js 16 (App Router) / React 19 / TypeScript
+- **UI**: Tailwind CSS 4 + shadcn/ui + Recharts
+- **ORM**: Prisma 7 (MySQL 8.0)
+- **Auth**: NextAuth.js 5 (beta) — 現在モック認証
+- **LINE連携**: Liny API (Webhook POST)
+- **Deploy**: Vercel (https://rakushiire-crm.vercel.app)
 
-## 運営会社
-ベジクル（vegekul）- 業務用野菜卸売業者。ラクシーレは青果以外も含むワンストップ仕入れサービス。
+## Project Structure
+```
+src/
+├── app/              # Pages (App Router)
+│   ├── page.tsx      # Dashboard
+│   ├── users/        # User list & detail
+│   ├── segments/     # Segment management
+│   ├── delivery/     # Manual message delivery
+│   ├── automation/   # Automation rules
+│   ├── history/      # Delivery history
+│   ├── churn/        # Churn/new analysis
+│   └── settings/     # Settings & Liny config
+├── components/
+│   ├── ui/           # shadcn/ui (20+ components)
+│   ├── sidebar.tsx   # Navigation
+│   └── charts.tsx    # Chart utilities
+├── lib/
+│   ├── mock-data.ts  # Mock data (→ DB swap予定)
+│   ├── types.ts      # Shared type definitions
+│   ├── liny.ts       # Liny API client
+│   ├── prisma.ts     # Prisma client singleton
+│   └── actions/      # Server Actions (data access layer)
+│       ├── customers.ts
+│       ├── dashboard.ts
+│       ├── segments.ts
+│       ├── deliveries.ts
+│       ├── automation.ts
+│       ├── churn.ts
+│       └── liny.ts
+prisma/
+├── schema.prisma     # DB schema (EC + CRM tables)
+└── seed.ts           # Seed script
+docs/
+├── spec.md
+├── screens.md
+├── development-plan.md
+└── technical-findings.md
+```
 
-## 既存システム技術スタック（2026-03-03 調査完了）
-- EC Backend: PHP 8.2 / Laravel 11 / MySQL 8.0 / Laravel Sanctum
-- EC Frontend: Next.js 14 / React 18 / TypeScript
-- BPaaS Backend: PHP 8.2 / Laravel 11 / PostgreSQL 13
-- BPaaS Frontend: React 18 / Vite / MUI v5
-- ActivityLog: Laravel 11 / AWS DocumentDB（MongoDB互換）
-- メール: AWS SES
-- キュー: AWS SQS（28+キュー）
-- ストレージ: AWS S3
-- リアルタイム: Pusher WebSocket
-- LINE: OAuth Social Login（2アカウント: 都心便 / ネットスーパーマーケット）
-- SMS: なし（FAXのみ: Faximo）
-- 開発会社: Kozocom（GitHub org: Kozocom）
+## Development Status (2026-03-04)
+- **Phase 1 Frontend**: ✅ Complete (7 screens)
+- **Liny API Integration**: ✅ Complete & deployed
+- **Data**: 100% mock data — DB connection pending PDM confirmation
+- **Auth**: Mock credentials (admin@rakushiire.com / sales@rakushiire.com)
 
-## ドキュメント構成
-- `docs/spec.md` - 仕様書（トラッキング項目・コミュニケーション手段・離反/新規分析）
-- `docs/screens.md` - 画面設計（7画面構成）
-- `docs/development-plan.md` - Phase別開発計画（技術スタック・ギャップ分析含む）
-- `docs/technical-findings.md` - 技術調査結果（データモデル・API・外部サービス詳細）
+### Pending PDM Items
+- [ ] EC_SEARCH_KEYWORD_QUEUE processing destination
+- [ ] EC login datetime recording (dedicated column?)
+- [ ] CRM → EC DB direct access vs API only
 
-## 開発方針
-- Phase 1: CRM基本機能（閲覧・配信・Kintone連携）
-- Phase 2: AIレコメンド機能（Gem + NotebookLM のAPI化）
-- モバイル対応: 不要
-- データ更新: 日次バッチ
+## Architecture
+- Server Actions (`src/lib/actions/`) = data access layer
+- Mock data → Prisma queries swap when DB connected
+- EC MySQL tables = READ-ONLY from CRM
+- CRM tables (`crm_segments`, `crm_deliveries`, `crm_automation_rules`) = read-write
+- Dashboard page.tsx currently imports mock-data directly (TODO: migrate to Server Actions)
 
-## 現在のステータス
-- ✅ 仕様確定（全7画面の詳細設計完了）
-- ✅ 技術調査完了（Kozocom org 配下の全7リポジトリ調査済み）
-- ⏳ PDMへの残確認事項あり（Liny API、検索KW保存先、DB参照方法）
-- ⏳ CRM技術スタック選定待ち
+## Data Model
+```
+Account → SocialiteProvider (LINE UID = provider_id)
+  └── AccountCustomer
+        └── Customer → SmileOrder → OrderItem → MorikiProduct
+                     → Cart → CartOrder → CartItem
+                     → BusinessPartner (parent/children hierarchy)
+```
+**Note**: 1 Account → N Customer (important for queries)
 
-## 重要なデータモデル
-- Customer: 顧客情報（customer_code, status, address, partner_code等）
-- Account: ログインアカウント（1 Account → N Customer）
-- SocialiteProvider: LINE連携（provider_id = LINE UID, is_friend）
-- SmileOrder: 注文履歴（customer_code, business_partner_id, product_id, amount）
-- Cart/CartOrder/CartItem: カート情報（カゴ落ち検知用）
-- MorikiProduct/EcProduct/CommonProduct: 商品（3層構造）
-- BusinessPartner: パートナー（parent/children階層構造）
+## Key Patterns
+- All data fetching through Server Actions
+- Liny API = POST-only webhook (CRM → Liny)
+- LINE UID stored in `SocialiteProvider.provider_id`
+- Customer status flow: ec_temporary_register → waiting_for_register → pre_transaction → in_transaction ↔ delivery_stop → stop
 
-## 注意事項
-- ActivityLogは管理画面の操作ログ。EC側のページ閲覧・検索ログはなし
-- SMS配信サービスは未導入。新規選定が必要
-- Liny API連携可否がPDM確認待ち
-- 1 Accountが複数Customerを持てる構造に注意
+## Commands
+```bash
+npm run dev          # Dev server
+npm run build        # Production build
+npm run lint         # ESLint
+npx prisma studio    # DB explorer
+```
+
+## Env Variables
+```
+DATABASE_URL, LINY_ENDPOINT_URL, LINY_API_TOKEN, NEXTAUTH_SECRET, AUTH_SECRET
+```
+
+## Related Systems
+- rakushiire.com: Customer-facing EC (Laravel 11 / Next.js 14)
+- vege-tal.com: Admin dashboard (BPaaS)
+- Kintone: Communication history
+- Liny: LINE delivery management (5,772 friends)
+- GA4: Analytics (deployed)
+- Dev company: Kozocom (GitHub org)
