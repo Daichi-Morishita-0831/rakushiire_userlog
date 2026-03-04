@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Send, MessageSquare, Mail, Phone, ArrowRight, ArrowLeft, Check, Users, Clock, Eye } from "lucide-react";
+import { toast } from "sonner";
 
 type Channel = "line" | "email" | "sms";
 
@@ -106,6 +107,7 @@ export default function DeliveryPage() {
 
   const handleSend = () => {
     setStep(4); // Move to "完了" step
+    toast.success(scheduleType === "now" ? "配信を送信しました" : "配信を予約しました");
   };
 
   return (

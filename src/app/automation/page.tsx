@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Zap, Clock, Power, PowerOff, Trash2, Pencil } from "lucide-react";
+import { toast } from "sonner";
 import type { AutomationRule } from "@/lib/actions/automation";
 
 const TRIGGER_TYPES = [
@@ -126,6 +127,7 @@ export default function AutomationPage() {
             }
           : r
       ));
+      toast.success(`ルール「${formName.trim()}」を更新しました`);
     } else {
       const newRule: AutomationRule = {
         id: Math.max(...rules.map((r) => r.id), 0) + 1,
@@ -144,17 +146,22 @@ export default function AutomationPage() {
         messageTemplate: formMessage.trim() || undefined,
       };
       setRules([...rules, newRule]);
+      toast.success(`ルール「${newRule.name}」を作成しました`);
     }
     setShowCreate(false);
     resetForm();
   };
 
   const toggleActive = (id: number) => {
+    const target = rules.find((r) => r.id === id);
     setRules(rules.map((r) => r.id === id ? { ...r, isActive: !r.isActive } : r));
+    toast.success(`「${target?.name}」を${target?.isActive ? "停止" : "有効化"}しました`);
   };
 
   const deleteRule = (id: number) => {
+    const target = rules.find((r) => r.id === id);
     setRules(rules.filter((r) => r.id !== id));
+    toast.success(`ルール「${target?.name}」を削除しました`);
   };
 
   return (

@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Users, Zap, Trash2, X, GripVertical } from "lucide-react";
+import { toast } from "sonner";
 import type {
   Segment,
   SegmentCondition,
@@ -388,10 +389,13 @@ export default function SegmentsPage() {
     setSegments([...segments, newSegment]);
     setShowCreate(false);
     resetForm();
+    toast.success(`セグメント「${newSegment.name}」を作成しました`);
   };
 
   const handleDelete = (id: number) => {
+    const target = segments.find((s) => s.id === id);
     setSegments(segments.filter((s) => s.id !== id));
+    toast.success(`セグメント「${target?.name}」を削除しました`);
   };
 
   return (

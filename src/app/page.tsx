@@ -14,7 +14,19 @@ import {
   ArrowDownRight,
   ShoppingCart,
   ExternalLink,
+  CalendarDays,
+  RefreshCw,
 } from "lucide-react";
+import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   mockKpi,
   mockDailyActiveUsers,
@@ -85,12 +97,52 @@ function KpiCard({
   );
 }
 
+const PERIODS = [
+  { value: "week", label: "今週" },
+  { value: "month", label: "今月" },
+  { value: "quarter", label: "四半期" },
+] as const;
+
 export default function DashboardPage() {
+  const [period, setPeriod] = useState<string>("month");
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+
+  const periodLabel = PERIODS.find((p) => p.value === period)?.label || "今月";
+  const dateStr = lastRefresh.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
+
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">ダッシュボード</h1>
-        <p className="text-sm text-muted-foreground">2026年3月3日 時点</p>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">ダッシュボード</h1>
+          <p className="text-sm text-muted-foreground">{dateStr} 時点（{periodLabel}）</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className="w-[110px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PERIODS.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8"
+            onClick={() => {
+              setLastRefresh(new Date());
+              toast.success("データを更新しました");
+            }}
+          >
+            <RefreshCw className="h-3.5 w-3.5 mr-1" /> 更新
+          </Button>
+        </div>
       </div>
 
       {/* KPIカード */}

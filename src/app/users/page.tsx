@@ -28,6 +28,7 @@ import {
   type CrmStatus,
 } from "@/lib/mock-data";
 import { downloadCsv } from "@/lib/csv-export";
+import { toast } from "sonner";
 import Link from "next/link";
 
 function daysSince(dateStr: string | null): string {
@@ -135,6 +136,7 @@ export default function UsersPage() {
                   c.cellphone,
                 ])
               );
+              toast.success(`${filtered.length}件のユーザーデータをCSV出力しました`);
             }}
           >
             <Download className="h-4 w-4 mr-1" /> CSV
