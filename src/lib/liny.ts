@@ -154,8 +154,9 @@ export async function testLinyConnection(config?: LinyConfig): Promise<LinyApiRe
       };
     }
 
-    // 2xx or 422（バリデーションエラー=到達＆認証OK）は成功とみなす
-    if (response.ok || response.status === 422) {
+    // 2xx / 400 / 422 はすべて到達＆認証OKとみなす
+    // 400はテスト用ペイロードがバリデーションエラーになるケース（正常）
+    if (response.ok || response.status === 400 || response.status === 422) {
       return { success: true, statusCode: response.status };
     }
 
