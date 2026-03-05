@@ -16,12 +16,14 @@ export function ThemeToggle() {
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
       className="rounded-md p-1.5 hover:bg-muted transition-colors"
+      aria-label={theme === "dark" ? "ライトモードに切替" : "ダークモードに切替"}
+      aria-pressed={theme === "dark"}
       title={theme === "dark" ? "ライトモードに切替" : "ダークモードに切替"}
     >
       {theme === "dark" ? (
-        <Sun className="h-4 w-4" />
+        <Sun className="h-4 w-4" aria-hidden="true" />
       ) : (
-        <Moon className="h-4 w-4" />
+        <Moon className="h-4 w-4" aria-hidden="true" />
       )}
     </button>
   );

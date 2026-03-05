@@ -32,8 +32,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button
             onClick={() => setMobileOpen(true)}
             className="rounded-md p-1.5 hover:bg-muted"
+            aria-label="メニューを開く"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
           <span className="ml-3 text-lg font-bold tracking-tight">
             ラクシーレ

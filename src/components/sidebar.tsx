@@ -81,19 +81,20 @@ export function Sidebar({
             "ml-auto rounded-md p-1 hover:bg-muted",
             collapsed && !onMobileClose && "mx-auto"
           )}
+          aria-label={onMobileClose ? "メニューを閉じる" : collapsed ? "サイドバーを展開" : "サイドバーを折りたたむ"}
         >
           {onMobileClose ? (
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           ) : collapsed ? (
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
           ) : (
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           )}
         </button>
       </div>
 
       {/* ナビゲーション */}
-      <nav className="flex-1 space-y-1 px-2 py-3">
+      <nav className="flex-1 space-y-1 px-2 py-3" aria-label="メインナビゲーション">
         {filteredItems.map((item) => {
           const isActive =
             item.href === "/"
@@ -154,8 +155,9 @@ export function Sidebar({
               "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-1",
               collapsed && !onMobileClose && "justify-center px-2"
             )}
+            aria-label="ログアウト"
           >
-            <LogOut className="h-4 w-4 shrink-0" />
+            <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
             {(!collapsed || onMobileClose) && <span>ログアウト</span>}
           </button>
           {(!collapsed || onMobileClose) && <ThemeToggle />}

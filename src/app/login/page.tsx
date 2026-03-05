@@ -40,7 +40,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center space-y-2">
           <div className="mx-auto rounded-full bg-primary/10 p-3 w-fit">
-            <LogIn className="h-6 w-6 text-primary" />
+            <LogIn className="h-6 w-6 text-primary" aria-hidden="true" />
           </div>
           <CardTitle className="text-xl">
             ラクシーレ<span className="text-sm font-normal text-muted-foreground ml-1">CRM</span>
@@ -61,6 +61,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
+                aria-describedby={error ? "login-error" : undefined}
               />
             </div>
             <div className="space-y-2">
@@ -80,7 +81,7 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 rounded-md p-2">{error}</p>
+              <p id="login-error" role="alert" className="text-sm text-red-600 bg-red-50 rounded-md p-2">{error}</p>
             )}
 
             <Button type="submit" className="w-full" disabled={loading}>
