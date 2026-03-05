@@ -378,7 +378,7 @@ STARTING_REQUEST → UPDATING_DATA / BATCH_UPDATING_DATA → COMPLETED / FAILED
 | **Faximo** | FAX送信 | BPaaS-backendで設定 |
 | **LINE OAuth** | ソーシャルログイン（2アカウント） | EC-backendで設定済み |
 | **GA4** | アクセス解析 | 導入済み |
-| **Liny** | LINE配信管理 | 運用中（API連携可否は未確認） |
+| **Liny** | LINE配信管理 | ✅ 運用中・CRM独自Webhook連携テスト済み |
 
 ### SMS配信について
 
@@ -406,7 +406,7 @@ CRMでSMS配信を行う場合は、新規サービス導入が必要。
 | データ | 現状 | 対策案 |
 |--------|------|--------|
 | **ページ閲覧ログ** | なし（ActivityLogは管理画面操作ログのみ） | GA4連携 or EC-frontendにトラッキングJS追加 |
-| **サイト内検索キーワード** | SQSキュー（`EC_SEARCH_KEYWORD_QUEUE`）はあるが保存先不明 | EC-backend側のキュー処理を要調査 |
+| **サイト内検索キーワード** | ✅ SQSキュー → BPaaS PostgreSQL `ec_search_keywords`テーブルに保存、日次CSVでS3出力 | 既存データ活用可能 |
 | **EC側ログイン日時** | Accountの`updated_at`のみ（専用カラムなし） | ログインAPI呼び出し時に記録する仕組みが必要 |
 | **滞在時間** | なし | GA4連携で取得 |
 | **流入元** | なし | GA4連携で取得 |
@@ -437,12 +437,14 @@ CRMでSMS配信を行う場合は、新規サービス導入が必要。
 | 4 | 外部API | **EC-backend: 90+ REST API、Sanctum認証** | routes/api.php |
 | 5 | メール配信サービス | **AWS SES** | .env.example, config |
 | 6 | SMS配信サービス | **なし（FAXのみ: Faximo）** | pm-docs調査 |
-| 7 | Liny API連携可否 | **未確認（PDMに要確認）** | - |
+| 7 | Liny API連携可否 | **✅ CRM独自Webhook POST連携で解決・テスト済み** | CRM実装・テスト |
 | 8 | LINE UID紐づけ | **SocialiteProvider.provider_id で紐付き済み** | SocialiteProvider モデル |
 
-### 残確認事項
+### 残確認事項（2026-03-05更新: 4件中2件解決）
 
-- [ ] Liny APIの仕様・連携可否（PDMに確認）
-- [ ] `EC_SEARCH_KEYWORD_QUEUE`の処理先（検索キーワードがどこに保存されるか）
-- [ ] ECサイトのログイン日時の記録有無（Accountテーブルに専用カラムがあるか）
-- [ ] CRMツールからEC-backendのDBを直接参照可能か、API経由のみか
+- [x] Liny APIの仕様・連携可否 → ✅ CRM独自のWebhook POST連携で解決。接続テスト済み（HTTP 400 = 到達＆認証OK）
+- [x] `EC_SEARCH_KEYWORD_QUEUE`の処理先 → ✅ BPaaS-backendの`ProcessSearchKeywordJob`がSQSから受信し、PostgreSQLの`ec_search_keywords`テーブルに保存。日次CSVでS3出力
+- [ ] ECサイトのログイン日時の記録有無 → ❌ Account/Customerに`last_login_at`カラムなし。新規追加が必要（PDM回答待ち）
+- [ ] CRMツールからEC-backendのDBを直接参照可能か → ❌ 現状SQS経由のみ。CRM用内部APIの新設を推奨（PDM回答待ち）
+
+**2026-03-05: PDM（河口さん）にメール送信済み。残2件の回答待ち。**

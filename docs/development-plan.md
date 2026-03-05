@@ -23,7 +23,7 @@
 | キュー | AWS SQS | AWS SQS |
 | ストレージ | AWS S3 | AWS S3 |
 | SMS | なし（新規導入必要） | 要選定 |
-| LINE | Liny（API連携可否未確認） | Liny API or 直接API |
+| LINE | Liny（✅ API連携確認済み） | Liny Webhook POST（CRM独自連携） |
 
 詳細は [technical-findings.md](technical-findings.md) を参照。
 
@@ -42,17 +42,18 @@
 - [x] SMS配信サービス → なし（FAXのみ: Faximo）
 - [x] LINEユーザーIDの紐づけ → SocialiteProvider.provider_id で紐付き済み
 
-**PDMに要確認（残件）:**
-- [ ] Liny API連携可否
-- [ ] EC_SEARCH_KEYWORD_QUEUEの処理先
-- [ ] ECサイトのログイン日時記録有無
-- [ ] CRMからEC DBを直接参照可能か
+**PDM確認事項（4件中2件解決済み: 2026-03-05）:**
+- [x] Liny API連携可否 → ✅ CRM独自連携で解決（Liny Webhook POST、接続テスト済み）
+- [x] EC_SEARCH_KEYWORD_QUEUEの処理先 → ✅ BPaaS PostgreSQLの`ec_search_keywords`テーブルに保存、日次CSVでS3出力
+- [ ] ECサイトのログイン日時記録有無 → Account/Customerに`last_login_at`なし。新規カラム追加が必要
+- [ ] CRMからEC DBを直接参照可能か → SQS経由のみ。内部API新設を推奨
+
+**2026-03-05: PDM（河口さん）にメール送信済み。残2件の回答待ち。**
 
 **回答後に決定すること:**
 - CRMツールのDB選定（MySQL or PostgreSQL）
 - データ取得方法（API / DB直接 / バッチ処理）
 - SMS配信サービスの選定
-- Liny連携方法
 
 ### Step 2: データ基盤構築
 
@@ -95,7 +96,7 @@
 
 - Kintone連携（対応履歴・行動データ・コミュニケーション履歴の蓄積）
 - GA4連携（流入元データ・ページ閲覧・滞在時間の取得）
-- Liny連携（LINE配信トリガー・タグ連携）※ API可否確認後
+- Liny連携（LINE配信トリガー・タグ連携）✅ API接続テスト済み
 
 ---
 
@@ -159,7 +160,7 @@
 | データ | 現状 | 対策案 | 優先度 |
 |--------|------|--------|--------|
 | ページ閲覧ログ | なし | GA4連携 or EC-frontendにJS追加 | 高 |
-| サイト内検索KW | SQSキューあり（保存先不明） | PDMに確認 → 既存処理を活用 | 高 |
+| サイト内検索KW | ✅ BPaaS PostgreSQL `ec_search_keywords` + S3 CSV | 既存データを活用可能 | 高 |
 | ECログイン日時 | 専用カラムなし | ログインAPI処理時に記録追加 | 高 |
 | 滞在時間 | なし | GA4連携 | 中 |
 | 流入元 | なし | GA4連携 | 中 |
@@ -177,6 +178,6 @@
 | CRM用DB選定 | 未決定 | PDM回答後 |
 | データ取得方法 | 未決定 | PDM回答後 |
 | SMS配信サービス | 未決定（新規導入必要） | Phase 1開始時 |
-| Liny連携方法 | 未決定（API可否未確認） | PDM回答後 |
+| Liny連携方法 | ✅ Webhook POST（CRM独自連携） | 2026-03-05 |
 | モバイル対応 | ✅ 不要と確定 | - |
 | AIレコメンドの技術選定 | 未決定 | Phase 2開始時 |
