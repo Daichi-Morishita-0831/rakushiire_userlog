@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/session-provider";
+import { ThemeProvider } from "@/components/theme-provider";
 import { AppShell } from "@/components/app-shell";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -42,14 +43,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SessionProvider>
-          <AppShell>{children}</AppShell>
-          <Toaster position="top-right" richColors />
-        </SessionProvider>
+        <ThemeProvider>
+          <SessionProvider>
+            <AppShell>{children}</AppShell>
+            <Toaster position="top-right" richColors />
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

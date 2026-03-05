@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type NavItem = {
   href: string;
@@ -146,16 +147,19 @@ export function Sidebar({
             )}
           </div>
         )}
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className={cn(
-            "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors w-full",
-            collapsed && !onMobileClose && "justify-center px-2"
-          )}
-        >
-          <LogOut className="h-4 w-4 shrink-0" />
-          {(!collapsed || onMobileClose) && <span>ログアウト</span>}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className={cn(
+              "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-1",
+              collapsed && !onMobileClose && "justify-center px-2"
+            )}
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            {(!collapsed || onMobileClose) && <span>ログアウト</span>}
+          </button>
+          {(!collapsed || onMobileClose) && <ThemeToggle />}
+        </div>
         {(!collapsed || onMobileClose) && (
           <p className="text-[10px] text-muted-foreground mt-2 px-1">
             v0.1.0 (開発中) · PDM回答待ち: 4件
@@ -170,7 +174,7 @@ export function Sidebar({
       {/* デスクトップサイドバー */}
       <aside
         className={cn(
-          "hidden md:flex flex-col border-r bg-white transition-all duration-200",
+          "hidden md:flex flex-col border-r bg-background transition-all duration-200",
           collapsed ? "w-16" : "w-60"
         )}
       >
