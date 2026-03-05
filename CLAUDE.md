@@ -82,7 +82,11 @@ docs/
 - **Page Metadata**: ✅ Title template, Apple Web App
 - **PWA**: ✅ manifest.json, viewport meta
 - **Env Validation**: ✅ Startup check via instrumentation.ts
-- **Unit Tests**: ✅ 11 tests (Liny client + env validation)
+- **Unit Tests**: ✅ 21 tests (Liny client, env validation, batch, auth, types)
+- **E2E Tests**: ✅ 7 tests (Playwright — auth, navigation, role-based UI, 404)
+- **CI/CD**: ✅ GitHub Actions (lint → test → build)
+- **Dark Mode**: ✅ next-themes (system/light/dark toggle)
+- **Lighthouse Optimization**: ✅ Static asset caching, image formats
 - **Custom 404**: ✅ Japanese not-found page
 
 ### Pending (PDM回答待ち: 2件)
@@ -129,8 +133,9 @@ Account → SocialiteProvider (LINE UID = provider_id)
 ```bash
 npm run dev          # Dev server (port 3000)
 npm run build        # Production build
-npm run test         # Run Vitest (11 tests)
+npm run test         # Run Vitest (21 tests)
 npm run test:watch   # Watch mode
+npm run test:e2e     # Run Playwright E2E (7 tests)
 npm run lint         # ESLint
 npx prisma studio    # DB explorer
 ```

@@ -162,7 +162,7 @@ export function Sidebar({
         </div>
         {(!collapsed || onMobileClose) && (
           <p className="text-[10px] text-muted-foreground mt-2 px-1">
-            v0.1.0 (開発中) · PDM回答待ち: 4件
+            v0.1.0 (開発中) · PDM回答待ち: 2件
           </p>
         )}
       </div>
@@ -188,7 +188,7 @@ export function Sidebar({
             className="fixed inset-0 z-40 bg-black/50 md:hidden"
             onClick={onMobileClose}
           />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-white md:hidden">
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-background md:hidden">
             {sidebarContent}
           </aside>
         </>
