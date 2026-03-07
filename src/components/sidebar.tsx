@@ -16,6 +16,7 @@ import {
   LogOut,
   User,
   Settings,
+  MessageCircle,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -37,6 +38,7 @@ const navItems: NavItem[] = [
   { href: "/delivery", label: "手動配信", icon: Send },
   { href: "/automation", label: "自動配信", icon: Zap, roles: ["admin"] },
   { href: "/history", label: "配信履歴", icon: History },
+  { href: "/chat", label: "AIチャット", icon: MessageCircle, roles: ["admin"] },
   { href: "/settings", label: "設定", icon: Settings, roles: ["admin"] },
 ];
 

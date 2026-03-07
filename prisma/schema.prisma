@@ -297,3 +297,49 @@ model AutomationRule {
 
   @@map("crm_automation_rules")
 }
+
+// ============================================================
+// AIチャットテーブル（LINE AIチャット対応機能）
+// ============================================================
+
+model ChatSession {
+  id                String        @id @default(uuid())
+  lineUid           String        @map("line_uid")
+  customerCode      String?       @map("customer_code")
+  customerName      String?       @map("customer_name")
+  channel           String        @default("line")
+  status            String        @default("active") // active | escalated | resolved | closed
+  inquiryCategory   String?       @map("inquiry_category")
+  needsHumanSupport Boolean       @default(false) @map("needs_human_support")
+  escalationReason  String?       @map("escalation_reason")
+  startedAt         DateTime      @default(now()) @map("started_at")
+  endedAt           DateTime?     @map("ended_at")
+  messageCount      Int           @default(0) @map("message_count")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  messages          ChatMessage[]
+
+  @@index([lineUid])
+  @@index([status])
+  @@index([needsHumanSupport])
+  @@map("crm_chat_sessions")
+}
+
+model ChatMessage {
+  id                String      @id @default(uuid())
+  sessionId         String      @map("session_id")
+  role              String      // customer | assistant | system
+  content           String      @db.Text
+  category          String?     // inquiry category code
+  needsHumanSupport Boolean     @default(false) @map("needs_human_support")
+  confidence        Decimal?    @db.Decimal(3, 2)
+  inputTokens       Int?        @map("input_tokens")
+  outputTokens      Int?        @map("output_tokens")
+  createdAt         DateTime    @default(now()) @map("created_at")
+
+  session           ChatSession @relation(fields: [sessionId], references: [id])
+
+  @@index([sessionId])
+  @@map("crm_chat_messages")
+}
