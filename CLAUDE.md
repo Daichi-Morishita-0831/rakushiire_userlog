@@ -11,7 +11,7 @@
 - **LINE連携**: Liny API (Webhook POST) — **接続テスト済み・正常動作確認**
 - **AI Chat**: Anthropic Claude API (claude-sonnet-4-20250514) — LINE自動応答
 - **Testing**: Vitest + Testing Library (62テスト)
-- **Deploy**: Vercel (https://rakushiire-crm.vercel.app)
+- **Deploy**: Vercel (https://vegekul-crm.vercel.app)
 
 ## Project Structure
 ```
