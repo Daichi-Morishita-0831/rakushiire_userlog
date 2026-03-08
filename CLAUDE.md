@@ -9,7 +9,8 @@
 - **ORM**: Prisma 7 (MySQL 8.0)
 - **Auth**: NextAuth.js 5 (beta.30) — bcryptハッシュ済みモック認証（DB切替準備済み）
 - **LINE連携**: Liny API (Webhook POST) — **接続テスト済み・正常動作確認**
-- **Testing**: Vitest + Testing Library (11テスト)
+- **AI Chat**: Anthropic Claude API (claude-sonnet-4-20250514) — LINE自動応答
+- **Testing**: Vitest + Testing Library (62テスト)
 - **Deploy**: Vercel (https://rakushiire-crm.vercel.app)
 
 ## Project Structure
@@ -23,6 +24,9 @@ src/
 │   ├── automation/   # Automation rules (admin only)
 │   ├── history/      # Delivery history
 │   ├── churn/        # Churn/new analysis
+│   ├── chat/         # AI Chat session management (admin only)
+│   │   ├── page.tsx  # Session list + KPI + filters
+│   │   └── [sessionId]/page.tsx  # Message thread + status control
 │   ├── settings/     # Settings & Liny config (admin only)
 │   ├── login/        # Login page
 │   ├── error.tsx     # Global error boundary
@@ -43,8 +47,13 @@ src/
 │   ├── auth-utils.ts # bcryptjs password hashing utilities
 │   ├── env.ts        # Environment variable validation
 │   ├── ai/           # LINE AI Chat
-│   │   ├── system-prompt.ts  # 動的システムプロンプト生成（7カテゴリ分類）
-│   │   └── types.ts          # CustomerContext型定義
+│   │   ├── system-prompt.ts  # 動的システムプロンプト生成（7カテゴリ分類・事実情報・エスカレーション12基準）
+│   │   ├── types.ts          # CustomerContext/CrmStatus/ChatSession型定義
+│   │   ├── client.ts         # Anthropic SDKクライアント
+│   │   ├── chat-responder.ts # メインオーケストレータ
+│   │   ├── escalation.ts     # エスカレーション処理（Linyタグ+Webhook+Slack通知）
+│   │   ├── slack-notify.ts   # Slack Block Kit通知（緊急度3段階）
+│   │   └── token-tracker.ts  # トークン使用量トラッキング
 │   ├── __tests__/    # Unit tests (Vitest)
 │   └── actions/      # Server Actions (data access layer)
 │       ├── customers.ts
@@ -55,6 +64,7 @@ src/
 │       ├── history.ts
 │       ├── automation.ts
 │       ├── churn.ts
+│       ├── chat.ts       # AIチャット セッション/メッセージCRUD
 │       └── liny.ts
 ├── types/
 │   └── next-auth.d.ts  # NextAuth type augmentation (role)
@@ -71,7 +81,7 @@ docs/
 └── technical-findings.md
 ```
 
-## Development Status (2026-03-07)
+## Development Status (2026-03-08)
 
 ### Completed
 - **Phase 1 Frontend**: ✅ 8 screens complete
@@ -85,13 +95,16 @@ docs/
 - **Page Metadata**: ✅ Title template, Apple Web App
 - **PWA**: ✅ manifest.json, viewport meta
 - **Env Validation**: ✅ Startup check via instrumentation.ts
-- **Unit Tests**: ✅ 21 tests (Liny client, env validation, batch, auth, types)
+- **Unit Tests**: ✅ 62 tests (Liny, env, batch, auth, types, AI client, system-prompt, chat-responder, escalation, slack-notify, token-tracker)
 - **E2E Tests**: ✅ 7 tests (Playwright — auth, navigation, role-based UI, 404)
 - **CI/CD**: ✅ GitHub Actions (lint → test → build)
 - **Dark Mode**: ✅ next-themes (system/light/dark toggle)
 - **Lighthouse Optimization**: ✅ Static asset caching, image formats
 - **Custom 404**: ✅ Japanese not-found page
-- **LINE AI Chat**: ✅ システムプロンプト構築済み (`src/lib/ai/system-prompt.ts`)
+- **LINE AI Chat**: ✅ 全モジュール実装済み（system-prompt, client, chat-responder, escalation, slack-notify, token-tracker）
+- **LINE AI Chat 事実情報**: ✅ system-prompt.tsに代表電話、午後便時間、欠品通知、LINE登録フロー、配送方法、写真対応、営業時間外対応等を追加
+- **Slack通知**: ✅ Block Kit形式エスカレーション通知（緊急度3段階: critical/high/normal）
+- **AI Chat管理画面**: ✅ セッション一覧（KPI+フィルタ）+ メッセージスレッド + ステータス管理
 - **LINE問い合わせ分析**: ✅ Liny 3ヶ月分4,200件分析完了（別リポジトリ: vegekul/vegekul-line-ai-chat）
 
 ### LINE AI Chat 分析結果サマリー (2026-03-07)
@@ -119,8 +132,12 @@ Liny管理画面から3ヶ月分（2025-12-05〜2026-03-07）のメッセージ4
 - [x] ~~Notionデータ収集（CS/CRM関連ナレッジ）~~ → ✅ 取得・分析完了
 - [x] ~~対応問答集の作成~~ → ✅ 7カテゴリ・40+パターン作成済み（Notion: https://www.notion.so/LINE-AI-31cf85be974e806db33ae7ae399af3e0）
 - [ ] **CS部門の問答集レビュー待ち** ← ⚠️ ここで止まっている。⚠️確認ポイント12箇所のフィードバックが必要
-- [ ] system-prompt.ts の更新（CSレビュー反映後: 配送1位化、写真対応、電話要求パターン追加）
+- [x] ~~system-prompt.ts に事実情報追加~~ → ✅ 代表電話、配送ルール、欠品通知、写真対応等（CSレビュー不要分）
+- [x] ~~Slack通知機能~~ → ✅ slack-notify.ts（Block Kit形式、escalation.tsに統合済み）
+- [x] ~~AI Chat管理画面~~ → ✅ /chat（セッション一覧+KPI）+ /chat/[sessionId]（メッセージスレッド）
+- [ ] system-prompt.ts の最終調整（CSレビュー反映後: AI/人間の境界線確定、回答文面微調整）
 - [ ] Slack投稿（調査レポート共有ドラフトのレビュー後）
+- [ ] SLACK_ESCALATION_WEBHOOK_URL のVercel設定（Webhook作成後）
 
 ### Next Steps (回答後)
 1. CRM DB選定（MySQL or PostgreSQL）
@@ -133,9 +150,24 @@ Liny管理画面から3ヶ月分（2025-12-05〜2026-03-07）のメッセージ4
 - Server Actions (`src/lib/actions/`) = data access layer
 - Mock data → Prisma queries swap when DB connected
 - EC MySQL tables = READ-ONLY from CRM
-- CRM tables (`crm_segments`, `crm_deliveries`, `crm_automation_rules`) = read-write
-- Roles: `admin` (full access) / `sales` (restricted: no segments/automation/settings)
+- CRM tables (`crm_segments`, `crm_deliveries`, `crm_automation_rules`, `crm_chat_sessions`, `crm_chat_messages`) = read-write
+- Roles: `admin` (full access) / `sales` (restricted: no segments/automation/settings/chat)
 - Auth: NextAuth v5 + bcrypt + JWT strategy (8hr maxAge)
+
+### LINE AI Chat Architecture
+```
+Liny Webhook → /api/webhooks/liny/inbound
+  → createOrGetChatSession(lineUid)
+  → getCustomerByLineUid(lineUid) → CustomerContext
+  → buildSystemPrompt(customer) → 動的プロンプト生成
+  → Claude API (chat-responder.ts)
+  → if needsHumanSupport:
+      → handleEscalation() → 並行実行:
+        1. Liny タグ付与（AI_要対応 + カテゴリ別タグ）
+        2. 汎用Webhook通知
+        3. Slack Block Kit通知（緊急度3段階）
+  → Liny Reply (LINE返信)
+```
 
 ## Data Model
 ```
@@ -158,7 +190,7 @@ Account → SocialiteProvider (LINE UID = provider_id)
 ```bash
 npm run dev          # Dev server (port 3000)
 npm run build        # Production build
-npm run test         # Run Vitest (21 tests)
+npm run test         # Run Vitest (62 tests)
 npm run test:watch   # Watch mode
 npm run test:e2e     # Run Playwright E2E (7 tests)
 npm run lint         # ESLint
@@ -167,10 +199,15 @@ npx prisma studio    # DB explorer
 
 ## Env Variables
 ```
-AUTH_SECRET           # Required: NextAuth encryption key
-LINY_ENDPOINT_URL     # Optional: Liny API endpoint
-LINY_API_TOKEN        # Optional: Liny API token (UUID format)
-# DATABASE_URL        # Required when DB connected
+AUTH_SECRET                    # Required: NextAuth encryption key
+ANTHROPIC_API_KEY              # Required: Claude API key (LINE AI Chat)
+LINY_ENDPOINT_URL              # Optional: Liny API endpoint
+LINY_API_TOKEN                 # Optional: Liny API token (UUID format)
+SLACK_ESCALATION_WEBHOOK_URL   # Optional: Slack Incoming Webhook (エスカレーション通知)
+ESCALATION_WEBHOOK_URL         # Optional: 汎用Webhook (Slack未設定時のフォールバック)
+AI_MONTHLY_TOKEN_BUDGET        # Optional: 月次トークン予算 (default: 500000)
+LINY_WEBHOOK_SECRET            # Optional: Liny inbound webhook署名検証
+# DATABASE_URL                 # Required when DB connected
 ```
 
 ## Security
