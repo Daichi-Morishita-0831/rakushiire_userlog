@@ -21,6 +21,11 @@ vi.mock("@/lib/actions/chat", () => ({
   updateSessionStatus: vi.fn().mockResolvedValue(undefined),
 }));
 
+// Slack通知をモック
+vi.mock("../slack-notify", () => ({
+  sendSlackEscalationNotify: vi.fn().mockResolvedValue({ sent: false }),
+}));
+
 import { handleEscalation } from "../escalation";
 import { sendLinyRequest } from "@/lib/liny";
 import { saveChatMessage, updateSessionStatus } from "@/lib/actions/chat";

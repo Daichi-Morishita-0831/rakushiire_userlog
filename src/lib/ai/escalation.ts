@@ -9,6 +9,7 @@
 
 import { sendLinyRequest } from "@/lib/liny";
 import { saveChatMessage, updateSessionStatus } from "@/lib/actions/chat";
+import { sendSlackEscalationNotify } from "./slack-notify";
 import type {
   ChatSession,
   AiChatResponse,
@@ -64,6 +65,12 @@ export interface EscalationResult {
     success?: boolean;
     error?: string;
   };
+  /** Slack通知結果 */
+  slackResult: {
+    sent: boolean;
+    success?: boolean;
+    error?: string;
+  };
   /** チャットスレッドに追加されたシステムメッセージ */
   systemMessageId: string | null;
 }
@@ -78,17 +85,20 @@ export interface EscalationResult {
  * @param session - 現在のチャットセッション
  * @param aiResponse - AI応答結果
  * @param lineUid - LINE UID（Linyタグ付与用）
+ * @param customerMessage - 顧客の元メッセージ（Slack通知に含める）
  */
 export async function handleEscalation(
   session: ChatSession,
   aiResponse: AiChatResponse,
-  lineUid: string
+  lineUid: string,
+  customerMessage?: string
 ): Promise<EscalationResult> {
   if (!aiResponse.needsHumanSupport) {
     return {
       escalated: false,
       linyTagResult: { success: true, tagsAdded: [] },
       webhookResult: { sent: false },
+      slackResult: { sent: false },
       systemMessageId: null,
     };
   }
@@ -97,10 +107,11 @@ export async function handleEscalation(
     `[Escalation] セッション ${session.id}: category=${aiResponse.category}, reason=${aiResponse.escalationReason}`
   );
 
-  // 並行実行: Linyタグ付与 + 外部Webhook + セッション更新
-  const [linyTagResult, webhookResult] = await Promise.all([
+  // 並行実行: Linyタグ付与 + 外部Webhook + Slack通知
+  const [linyTagResult, webhookResult, slackResult] = await Promise.all([
     addEscalationTags(lineUid, aiResponse.category),
     sendEscalationWebhook(session, aiResponse),
+    sendSlackEscalationNotify(session, aiResponse, customerMessage),
   ]);
 
   // セッションステータス更新
@@ -124,13 +135,14 @@ export async function handleEscalation(
   });
 
   console.log(
-    `[Escalation] 完了: linyTags=${linyTagResult.success}, webhook=${webhookResult.sent ? webhookResult.success : "skip"}`
+    `[Escalation] 完了: linyTags=${linyTagResult.success}, webhook=${webhookResult.sent ? webhookResult.success : "skip"}, slack=${slackResult.sent ? slackResult.success : "skip"}`
   );
 
   return {
     escalated: true,
     linyTagResult,
     webhookResult,
+    slackResult,
     systemMessageId: systemMessage.id,
   };
 }

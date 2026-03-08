@@ -15,7 +15,8 @@ const envVars: EnvVar[] = [
   { key: "LINY_ENDPOINT_URL", required: false, description: "Liny エンドポイントURL" },
   { key: "ANTHROPIC_API_KEY", required: false, description: "Anthropic APIキー（AIチャット用）" },
   { key: "LINY_WEBHOOK_SECRET", required: false, description: "Liny Webhook署名検証キー" },
-  { key: "ESCALATION_WEBHOOK_URL", required: false, description: "エスカレーション通知先Webhook URL" },
+  { key: "ESCALATION_WEBHOOK_URL", required: false, description: "エスカレーション通知先Webhook URL（汎用）" },
+  { key: "SLACK_ESCALATION_WEBHOOK_URL", required: false, description: "Slackエスカレーション通知Incoming Webhook URL" },
   { key: "AI_MONTHLY_TOKEN_BUDGET", required: false, description: "AI月次トークン予算（デフォルト: 500000）" },
   // DB接続時に有効化
   // { key: "DATABASE_URL", required: true, description: "MySQL接続文字列" },

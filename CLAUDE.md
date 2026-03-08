@@ -42,6 +42,9 @@ src/
 │   ├── prisma.ts     # Prisma client singleton
 │   ├── auth-utils.ts # bcryptjs password hashing utilities
 │   ├── env.ts        # Environment variable validation
+│   ├── ai/           # LINE AI Chat
+│   │   ├── system-prompt.ts  # 動的システムプロンプト生成（7カテゴリ分類）
+│   │   └── types.ts          # CustomerContext型定義
 │   ├── __tests__/    # Unit tests (Vitest)
 │   └── actions/      # Server Actions (data access layer)
 │       ├── customers.ts
@@ -68,7 +71,7 @@ docs/
 └── technical-findings.md
 ```
 
-## Development Status (2026-03-05)
+## Development Status (2026-03-07)
 
 ### Completed
 - **Phase 1 Frontend**: ✅ 8 screens complete
@@ -88,14 +91,36 @@ docs/
 - **Dark Mode**: ✅ next-themes (system/light/dark toggle)
 - **Lighthouse Optimization**: ✅ Static asset caching, image formats
 - **Custom 404**: ✅ Japanese not-found page
+- **LINE AI Chat**: ✅ システムプロンプト構築済み (`src/lib/ai/system-prompt.ts`)
+- **LINE問い合わせ分析**: ✅ Liny 3ヶ月分4,200件分析完了（別リポジトリ: vegekul/vegekul-line-ai-chat）
 
-### Pending (PDM回答待ち: 2件)
+### LINE AI Chat 分析結果サマリー (2026-03-07)
+Liny管理画面から3ヶ月分（2025-12-05〜2026-03-07）のメッセージ4,200件を分析:
+- 🔴 配送・納品: **28.6%**（最多。Slack分析では3位→実データでは1位に上昇）
+- 🟡 商品・価格: 9.0%
+- 🟡 注文変更: 8.6%
+- 🟠 品質クレーム: 6.1%（全件エスカレーション）
+- 🟢 アカウント: 2.0%
+- 🟢 支払い・請求: 1.9%（基本エスカレーション）
+- 画像メッセージ: 全体の23%（品質クレーム時の写真添付率が高い）
+- 月間メッセージ増加率: +18%/月
+- 詳細: https://github.com/vegekul/vegekul-line-ai-chat
+
+### Pending
+#### PDM回答待ち (2件)
 - [x] ~~Liny API連携可否~~ → ✅ CRM独自連携で解決
 - [x] ~~EC_SEARCH_KEYWORD_QUEUE処理先~~ → ✅ BPaaS PostgreSQLのec_search_keywordsテーブル
 - [ ] ECサイトのログイン日時記録 → Account/Customerに`last_login_at`なし。新規追加が必要
 - [ ] CRMからEC DBへのアクセス方式 → SQS経由のみ。内部API新設を推奨
 
 **2026-03-05: PDM（河口さん）にメール送信済み。残2件の回答待ち。**
+
+#### LINE AI Chat 残タスク
+- [x] ~~Notionデータ収集（CS/CRM関連ナレッジ）~~ → ✅ 取得・分析完了
+- [x] ~~対応問答集の作成~~ → ✅ 7カテゴリ・40+パターン作成済み（Notion: https://www.notion.so/LINE-AI-31cf85be974e806db33ae7ae399af3e0）
+- [ ] **CS部門の問答集レビュー待ち** ← ⚠️ ここで止まっている。⚠️確認ポイント12箇所のフィードバックが必要
+- [ ] system-prompt.ts の更新（CSレビュー反映後: 配送1位化、写真対応、電話要求パターン追加）
+- [ ] Slack投稿（調査レポート共有ドラフトのレビュー後）
 
 ### Next Steps (回答後)
 1. CRM DB選定（MySQL or PostgreSQL）
@@ -161,4 +186,6 @@ LINY_API_TOKEN        # Optional: Liny API token (UUID format)
 - Liny: LINE delivery management (5,772 friends)
 - GA4: Analytics (deployed)
 - Dev company: Kozocom (GitHub org: Kozocom)
-- GitHub repos: vegekul-EC-backend, vegekul-BPaaS-backend, vegekul-EC-frontend, vegekul-BPaaS-frontend-new, vegekul-activitylog-backend, vegekul-pm-docs
+- GitHub org (internal): vegekul
+- GitHub repos (Kozocom): vegekul-EC-backend, vegekul-BPaaS-backend, vegekul-EC-frontend, vegekul-BPaaS-frontend-new, vegekul-activitylog-backend, vegekul-pm-docs
+- GitHub repos (vegekul): vegekul-line-ai-chat (LINE AI調査データ), vegekul-dwh, sales-automation, infomart-integration, vegekul-support

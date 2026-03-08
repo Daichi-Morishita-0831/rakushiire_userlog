@@ -28,6 +28,17 @@ export const INQUIRY_CATEGORY_LABELS: Record<InquiryCategory, string> = {
   other: "その他",
 };
 
+// --- CRMステータス（Notion取引ステータスに基づく） ---
+
+export type CrmStatus =
+  | "active"               // 取引中 → 通常対応
+  | "new"                  // 取引無（新規） → 丁寧な案内
+  | "churn_risk"           // 離脱リスク → 丁寧な対応
+  | "churned"              // 過去取引（離反） → 再注文のきっかけ提供
+  | "approach_prohibited"  // アプローチ禁止 → 営業メッセージ一切不可
+  | "blacklisted"          // ブラックリスト → 即エスカレーション
+  | "closed";              // 閉業 → 対応不要
+
 // --- エスカレーション理由 ---
 
 export type EscalationReason =
@@ -65,7 +76,7 @@ export interface CustomerContext {
   customerName: string;
   shopCategory: string;
   status: string;
-  crmStatus: string;
+  crmStatus: CrmStatus;
   salesPersonName: string;
   lastOrderDate: string | null;
   monthlyOrderAmount: number;
