@@ -64,7 +64,7 @@ export function Sidebar({
       <div className="flex h-14 items-center border-b px-4">
         {!collapsed && (
           <span className="text-lg font-bold tracking-tight">
-            ラクシーレ
+            ベジクル
             <span className="text-sm font-normal text-muted-foreground ml-1">
               CRM
             </span>

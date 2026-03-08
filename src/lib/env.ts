@@ -18,6 +18,8 @@ const envVars: EnvVar[] = [
   { key: "ESCALATION_WEBHOOK_URL", required: false, description: "エスカレーション通知先Webhook URL（汎用）" },
   { key: "SLACK_ESCALATION_WEBHOOK_URL", required: false, description: "Slackエスカレーション通知Incoming Webhook URL" },
   { key: "AI_MONTHLY_TOKEN_BUDGET", required: false, description: "AI月次トークン予算（デフォルト: 500000）" },
+  { key: "GOOGLE_CLIENT_ID", required: false, description: "Google OAuth クライアントID" },
+  { key: "GOOGLE_CLIENT_SECRET", required: false, description: "Google OAuth クライアントシークレット" },
   // DB接続時に有効化
   // { key: "DATABASE_URL", required: true, description: "MySQL接続文字列" },
 ];

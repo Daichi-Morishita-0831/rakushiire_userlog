@@ -37,7 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
           <span className="ml-3 text-lg font-bold tracking-tight">
-            ラクシーレ
+            ベジクル
             <span className="text-sm font-normal text-muted-foreground ml-1">
               CRM
             </span>

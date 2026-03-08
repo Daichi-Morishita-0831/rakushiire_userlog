@@ -1,6 +1,6 @@
 {
-  "name": "ラクシーレ CRM",
-  "short_name": "ラクシーレCRM",
+  "name": "ベジクル CRM",
+  "short_name": "ベジクルCRM",
   "description": "rakushiire.com 顧客管理ツール",
   "start_url": "/",
   "display": "standalone",

@@ -1,6 +1,8 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { verifyPassword } from "@/lib/auth-utils";
+import type { Provider } from "next-auth/providers";
 
 // --- Mock users (development only) ---
 // DB接続後は prisma.account.findUnique() に置き換え
@@ -21,38 +23,52 @@ const MOCK_USERS = [
   },
 ];
 
+// --- プロバイダー構築（Google OAuth は環境変数がある場合のみ有効化）---
+const providers: Provider[] = [];
+
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    })
+  );
+}
+
+providers.push(
+  Credentials({
+    name: "ベジクル CRM",
+    credentials: {
+      email: { label: "メールアドレス", type: "email" },
+      password: { label: "パスワード", type: "password" },
+    },
+    async authorize(credentials) {
+      const email = credentials?.email as string | undefined;
+      const password = credentials?.password as string | undefined;
+
+      if (!email || !password) return null;
+
+      // --- DB接続後のコード ---
+      // const account = await prisma.account.findUnique({ where: { email } });
+      // if (!account || account.deletedAt) return null;
+      // const valid = await verifyPassword(password, account.password);
+      // if (!valid) return null;
+      // return { id: String(account.id), email: account.email, name: account.username, role: "sales" };
+
+      // --- Mock auth（開発用）---
+      const user = MOCK_USERS.find((u) => u.email === email);
+      if (!user) return null;
+
+      const valid = await verifyPassword(password, user.hashedPassword);
+      if (!valid) return null;
+
+      return { id: user.id, email: user.email, name: user.name, role: user.role };
+    },
+  })
+);
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
-    Credentials({
-      name: "ラクシーレ CRM",
-      credentials: {
-        email: { label: "メールアドレス", type: "email" },
-        password: { label: "パスワード", type: "password" },
-      },
-      async authorize(credentials) {
-        const email = credentials?.email as string | undefined;
-        const password = credentials?.password as string | undefined;
-
-        if (!email || !password) return null;
-
-        // --- DB接続後のコード ---
-        // const account = await prisma.account.findUnique({ where: { email } });
-        // if (!account || account.deletedAt) return null;
-        // const valid = await verifyPassword(password, account.password);
-        // if (!valid) return null;
-        // return { id: String(account.id), email: account.email, name: account.username, role: "sales" };
-
-        // --- Mock auth（開発用）---
-        const user = MOCK_USERS.find((u) => u.email === email);
-        if (!user) return null;
-
-        const valid = await verifyPassword(password, user.hashedPassword);
-        if (!valid) return null;
-
-        return { id: user.id, email: user.email, name: user.name, role: user.role };
-      },
-    }),
-  ],
+  providers,
   pages: {
     signIn: "/login",
   },
@@ -70,9 +86,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return isLoggedIn;
     },
-    jwt({ token, user }) {
+    jwt({ token, user, account }) {
       if (user) {
-        token.role = user.role;
+        if (account?.provider === "google") {
+          // Google OAuth ユーザー: デフォルトで admin ロールを付与
+          // DB接続時は Account テーブルからロールを取得する
+          // TODO: const dbUser = await prisma.account.findUnique({ where: { email: user.email } });
+          // TODO: token.role = dbUser?.role ?? "sales";
+          token.role = "admin";
+        } else {
+          // Credentials ユーザー: authorize() で設定された role を使用
+          token.role = user.role;
+        }
       }
       return token;
     },

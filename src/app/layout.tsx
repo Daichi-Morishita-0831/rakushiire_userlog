@@ -25,15 +25,15 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "ラクシーレ CRM",
-    template: "%s | ラクシーレ CRM",
+    default: "ベジクル CRM",
+    template: "%s | ベジクル CRM",
   },
   description: "rakushiire.com CRM管理ツール",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "ラクシーレ CRM",
+    title: "ベジクル CRM",
   },
 };
 

@@ -4,7 +4,7 @@
  */
 export const ja = {
   common: {
-    appName: "ラクシーレ",
+    appName: "ベジクル",
     appSuffix: "CRM",
     loading: "読み込み中...",
     save: "保存",
